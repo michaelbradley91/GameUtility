@@ -7,7 +7,7 @@ import softwire.com.game_utility.graphics.screen as screen
 import softwire.com.game_utility.input_listeners.keyboard_listener as key_listeners
 import softwire.com.game_utility.input_listeners.mouse_button_listener as mouse_button_listeners
 import softwire.com.game_utility.input_listeners.mouse_motion_listener as mouse_motion_listeners
-import softwire.com.game_utility.graphics.picture_handler as picture_handler
+import softwire.com.game_utility.graphics.picture_handling.picture_handler as picture_handler
 import pygame.locals
 
 class DummyKeyListener(key_listeners.KeyboardListener):
