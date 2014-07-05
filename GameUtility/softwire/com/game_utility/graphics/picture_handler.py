@@ -64,7 +64,7 @@ class PictureHandler(object):
     @staticmethod
     def _get_picture():
         PictureHandler.__picture_lock.acquire()
-        #Fixing git
+        #Fixing git. Still fixing
         return PictureHandler.__picture
     
     @staticmethod
