@@ -9,8 +9,8 @@ import softwire.com.game_utility.input_listeners.mouse_button_listener as mouse_
 import softwire.com.game_utility.input_listeners.mouse_motion_listener as mouse_motion_listeners
 import softwire.com.game_utility.graphics.picture_handling.picture_handler as picture_handler
 import pygame.locals
-#import softwire.com.game_utility.graphics.picture_handling.rectangle_tree as rect_tree
-#import time
+import softwire.com.game_utility.graphics.picture_handling.rectangle_tree as rect_tree
+import time
 
 class DummyKeyListener(key_listeners.KeyboardListener):
     
@@ -56,9 +56,12 @@ class DummyMouseMotionListener(mouse_motion_listeners.MouseMotionListener):
         print("Mouse moved to " + str(mouse_position))
 
 def run():
-    #current_milli_time = lambda: int(round(time.time() * 1000))
+    current_milli_time = lambda: int(round(time.time() * 1000))
     '''Run the application!!! (For test purposes)'''
+    tree = rect_tree.RectangleTree((500,1000))
+    tree.insert_rectangle((35,5,50,20,None))
     '''Initialise the picture handler!'''
+    screen.Screen.initialise("My game")
     picture_handler.PictureHandler.initialise()
     #Create a keyboard listener...
     DummyKeyListener([pygame.locals.K_ESCAPE])

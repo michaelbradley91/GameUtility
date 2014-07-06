@@ -33,6 +33,8 @@ class RectangleTree(object):
         #Initialise the coordinate map...
         self.__divide_screen()
         self.__initialise_coordinate_map()
+        #Initialise the tree!
+        self.__root = [0,[],[],[],[]]
         
     def insert_rectangle(self, rect):
         '''
@@ -41,6 +43,27 @@ class RectangleTree(object):
         if the whole of the rectangle lies outside the grid
         @param rect: the rectangle to add to the rectangle tree
         '''
+        #Check if it is inside the screen
+        if not self.__is_inside_screen(rect):
+            return
+        #Convert the rectangle
+        rect = self.__convert_rect(rect)
+        #Recur to insert the rectangle
+        current_node = self.__root
+        for dim in range(0,7):
+            coord = self.__get_coordinate(rect, dim)+1
+            #Construct the node if necessary
+            if current_node[coord]==[]:
+                current_node[0]+=1
+                current_node[coord] = [0,[],[],[],[]]
+            current_node = current_node[coord]
+        #Final one...
+        coord = self.__get_coordinate(rect, 7)+1
+        if current_node[coord]==[]:
+            current_node[0]+=1
+        #This final list should just have the rectangle added to it, I think...
+        current_node[coord].append(rect)
+        print(str(self.__root))
         
     def remove_rectangle(self, rect):
         '''
@@ -61,7 +84,7 @@ class RectangleTree(object):
         @param rect: the rectangle to check
         @return: true iff the rectangle is actually inside the screen (at least in part)
         '''
-        (x_min, y_min, x_max, y_max) = rect
+        (x_min, y_min, x_max, y_max, _) = rect
         return x_max>0 and y_max>0 and x_min<self.__width and y_min<self.__height
         
     def __divide_screen(self):
@@ -75,17 +98,19 @@ class RectangleTree(object):
         for i in range(0,16):
             width_dividers[i] = i * width_division
         for i in range(0,self.__width % 16): #the remainder
-            width_dividers[15-i] = width_dividers[i] + 1
+            width_dividers[15-i] = width_dividers[15-i] + (self.__width % 16) - i
         #Repeat for the height
         height_dividers = collections.defaultdict(lambda:0)
         height_division = self.__height / 16
         for i in range(0,16):
             height_dividers[i] = i * height_division
         for i in range(0,self.__height % 16): #the remainder
-            height_dividers[15-i] = height_dividers[i] + 1
+            height_dividers[15-i] = height_dividers[15-i] + (self.__height % 16) - i
         #For convenience:
         width_dividers[16] = self.__width+1 #plus one because we consider being >= to be in the sector
         height_dividers[16] = self.__height+1
+        print(str(width_dividers))
+        print(str(height_dividers))
         
         #This is memory intensive, but simplifies the coordinate calculation...
         self.__width_coordinate = collections.defaultdict(lambda:-1)
@@ -105,20 +130,23 @@ class RectangleTree(object):
                 #Coordinate changes
                 current_coord+=1
             self.__height_coordinate[i] = current_coord
+            
+        print(str(self.__width_coordinate))
+        print(str(self.__height_coordinate))
     
     def __initialise_coordinate_map(self):
         '''
         This function initialises the coordinate map so that coordinates can be returned quickly
         '''
         self.__coordinate_map = collections.defaultdict(lambda:None)
-        self.__coordinate_map[0] = lambda (x_min, y_min, x_max, y_max): self.width_coordinate[x_min]/4
-        self.__coordinate_map[1] = lambda (x_min, y_min, x_max, y_max): self.width_coordinate[x_max]/4
-        self.__coordinate_map[2] = lambda (x_min, y_min, x_max, y_max): self.height_coordinate[y_min]/4
-        self.__coordinate_map[3] = lambda (x_min, y_min, x_max, y_max): self.height_coordinate[y_max]/4
-        self.__coordinate_map[4] = lambda (x_min, y_min, x_max, y_max): self.width_coordinate[x_min]%4
-        self.__coordinate_map[5] = lambda (x_min, y_min, x_max, y_max): self.width_coordinate[x_max]%4
-        self.__coordinate_map[6] = lambda (x_min, y_min, x_max, y_max): self.height_coordinate[y_min]%4
-        self.__coordinate_map[7] = lambda (x_min, y_min, x_max, y_max): self.height_coordinate[y_max]%4
+        self.__coordinate_map[0] = lambda (x_min, y_min, x_max, y_max, _): self.__width_coordinate[x_min]/4
+        self.__coordinate_map[1] = lambda (x_min, y_min, x_max, y_max, _): self.__width_coordinate[x_max]/4
+        self.__coordinate_map[2] = lambda (x_min, y_min, x_max, y_max, _): self.__height_coordinate[y_min]/4
+        self.__coordinate_map[3] = lambda (x_min, y_min, x_max, y_max, _): self.__height_coordinate[y_max]/4
+        self.__coordinate_map[4] = lambda (x_min, y_min, x_max, y_max, _): self.__width_coordinate[x_min]%4
+        self.__coordinate_map[5] = lambda (x_min, y_min, x_max, y_max, _): self.__width_coordinate[x_max]%4
+        self.__coordinate_map[6] = lambda (x_min, y_min, x_max, y_max, _): self.__height_coordinate[y_min]%4
+        self.__coordinate_map[7] = lambda (x_min, y_min, x_max, y_max, _): self.__height_coordinate[y_max]%4
     
     def __get_coordinate(self, rect, dim):
         '''
@@ -128,4 +156,17 @@ class RectangleTree(object):
         '''
         return self.__coordinate_map[dim](rect)
         
+    def __convert_rect(self, rect):
+        '''
+        Convert the rectangle to one whose coordinates fit properly on the screen.
+        (Assumes the rectangle is well defined)
+        @param rect: the rectangle to convert
+        @return: the effective rectangle clipped to the screen
+        '''
+        (x_min, y_min, x_max, y_max, key) = rect
+        return (max(x_min,0),
+                max(y_min,0),
+                min(x_max,self.__width),
+                min(y_max,self.__height),
+                (x_min, y_min, x_max, y_max, key))
         
