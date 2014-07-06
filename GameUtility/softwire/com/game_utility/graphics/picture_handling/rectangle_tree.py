@@ -6,45 +6,43 @@ Created on 5 Jul 2014
 
 class RectangleTree(object):
     '''
-    Here's how it is going to work:
+    The rectangle tree is designed to store rectangles, and check for intersections between the stored
+    rectangle and another rectangle as efficiently as possible. It is specifically designed for fixed
+    width/height screens.
     
-    We will divide the screen into 32 * 16 pieces (where the 32 divides the width, and the 16 divides the height).
-    We will have one rectangle tree to be initialised with all of these rectangles. Call this rectangle tree
-    the "Screen Tree"
+    By rectangle, we actually mean a tuple of the form:
+    (x_min, y_min, x_max, y_max, key)
     
-    (Note that the exact number of ways we divide the screen may be adjusted according to stress tests...)
-    
-    When a rectangle for updating is registered, we find all the rectangles colliding with it in the Screen Tree.
-    As these rectangles are found, we also remove them from the tree, and remember them in a grid
-    which is a 32 * 16 boolean array.
-    
-    Once all of the updates are registered (with the above process repeated), we will compute the largest rectangles
-    filling the grid formed effectively by the 32 * 16 boolean array (the items being true must be filled).
-    We then reconstruct the corresponding rectangle coordinates.
-    
-    In the meantime we have another rectangle tree which we will call the "Item Tree". The Item Tree holds rectangles
-    bounding areas that the various drawers are interested in. With the rectangles constructed from the grid,
-    we now compute how each one collides with the rectangles in the item tree.
-    
-    We collect these items up, sort them in order, and instruct them to redraw over the rectangle.
-    (Technically, large rectangles increase the number of items which must be sorted, so it may be beneficial
-    to have smaller rectangles. However, I seriously doubt it would be worth it due to the amount of extra
-    redraws that might be necessary with smaller rectangles).
-    
-    When items want to register their interest in parts of the screen, they are added to the Item Tree
-    (and subsequently removed if necessary in a similar manner).
-    
-    Efficiency note:
-    
-    Re-filling the Screen tree each time is the most costly operation... It would be better if we could
-    approximate the coordinates of the rectangles, and merge them at the end. This might be possible...?
-    
+    where the key is arbitrary and for the user only.
     '''
 
-
-    def __init__(self):
+    def __init__(self, size):
         '''
-        Constructor
+        Construct a new rectangle tree, designed to cover coordinates ranging from (0,0) to (x,y) for
+        (x,y) = size.
+        @param size: the size of the space spanned by the rectangle tree
         '''
-        pass
+        self.__size = size
+        
+    def insert_rectangle(self, rect):
+        '''
+        This adds a rectangle to the tree. Note that if the rectangle falls outside
+        the size of the grid, it will effectively be clipped. The call will then have no effect
+        if the whole of the rectangle lies outside the grid
+        @param rect: the rectangle to add to the rectangle tree
+        '''
+        
+    def remove_rectangle(self, rect):
+        '''
+        Remove a rectangle from the tree. This has no effect if the exact rectangle given does not exist in the
+        tree.
+        @param rect: the rectangle to remove from the tree.
+        '''
+    
+    def collide_rectangle(self, rect, remove=False):
+        '''
+        @param rect: the rectangle to check for collisions against.
+        @param remove: whether or not the returned rectangles should also be removed from the structure.
+        @return: all of the rectangles strictly colliding (overlapping by at least one pixel) with the given rect.
+        '''
         
