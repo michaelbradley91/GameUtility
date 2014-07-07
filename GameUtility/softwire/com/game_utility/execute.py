@@ -60,6 +60,10 @@ def run():
     '''Run the application!!! (For test purposes)'''
     tree = rect_tree.RectangleTree((500,1000))
     tree.insert_rectangle((35,5,50,20,None))
+    tree.insert_rectangle((30,5,50,20,None))
+    tree.remove_rectangle((35,5,50,20,None))
+    tree.remove_rectangle((30,5,50,20,None))
+    tree.remove_rectangle((35,5,50,20,None))
     '''Initialise the picture handler!'''
     screen.Screen.initialise("My game")
     picture_handler.PictureHandler.initialise()

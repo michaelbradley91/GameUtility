@@ -40,7 +40,9 @@ class RectangleTree(object):
         '''
         This adds a rectangle to the tree. Note that if the rectangle falls outside
         the size of the grid, it will effectively be clipped. The call will then have no effect
-        if the whole of the rectangle lies outside the grid
+        if the whole of the rectangle lies outside the grid.
+        Note that if a rectangle is added twice, it will be included twice (and must be removed twice
+        if you understand what I mean)
         @param rect: the rectangle to add to the rectangle tree
         '''
         #Check if it is inside the screen
@@ -71,6 +73,49 @@ class RectangleTree(object):
         tree.
         @param rect: the rectangle to remove from the tree.
         '''
+        print("Starting!!")
+        print(self.__root)
+        #Check if it is inside the screen
+        if not self.__is_inside_screen(rect):
+            return
+        #Convert the rectangle
+        rect = self.__convert_rect(rect)
+        #Now we search for where the rectangle should exist...
+        #We need to hold the node stack too...
+        current_node = self.__root
+        node_stack = [current_node]
+        for dim in range(0,7):
+            coord = self.__get_coordinate(rect, dim)+1
+            #Construct the node if necessary
+            if current_node[coord]==[]:
+                return #does not exist
+            current_node = current_node[coord]
+            node_stack.append(current_node)
+        coord = self.__get_coordinate(rect, 7)+1
+        if current_node[coord]==[]:
+            return #does not exist
+        #Remove the rectangle...
+        current_node[coord].remove(rect)
+        #Now we need to correct for the removal...
+        removing = current_node[coord]==[]
+        print(self.__root)
+        dim = 6 #where we are in the node stack
+        while removing and dim>=0:
+            #Remove from the current node...
+            current_node[0]-=1
+            if (current_node[0]==0):
+                #We need to remove this too...
+                current_node = node_stack[dim]
+                current_node[self.__get_coordinate(rect, dim)+1] = []
+                dim-=1
+            else:
+                removing = False
+            print(self.__root)
+        #Correct for the root... (which is allowed to be empty)
+        if dim==-1:
+            self.__root[0]-=1
+        #That should have removed everything...maybe?
+        print(self.__root)
     
     def collide_rectangle(self, rect, remove=False):
         '''
@@ -109,9 +154,8 @@ class RectangleTree(object):
         #For convenience:
         width_dividers[16] = self.__width+1 #plus one because we consider being >= to be in the sector
         height_dividers[16] = self.__height+1
-        print(str(width_dividers))
-        print(str(height_dividers))
-        
+        print(width_dividers)
+        print(height_dividers)
         #This is memory intensive, but simplifies the coordinate calculation...
         self.__width_coordinate = collections.defaultdict(lambda:-1)
         self.__height_coordinate = collections.defaultdict(lambda:-1)
@@ -131,8 +175,6 @@ class RectangleTree(object):
                 current_coord+=1
             self.__height_coordinate[i] = current_coord
             
-        print(str(self.__width_coordinate))
-        print(str(self.__height_coordinate))
     
     def __initialise_coordinate_map(self):
         '''
