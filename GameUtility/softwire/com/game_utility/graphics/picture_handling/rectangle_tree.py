@@ -123,6 +123,63 @@ class RectangleTree(object):
         @param remove: whether or not the returned rectangles should also be removed from the structure.
         @return: all of the rectangles strictly colliding (overlapping by at least one pixel) with the given rect.
         '''
+        #Check if it is inside the screen
+        if not self.__is_inside_screen(rect):
+            return
+        #Convert the rectangle
+        rect = self.__convert_rect(rect)
+        #We need to return all rectangles on all sides in a recursive manner. We will do this recursively...
+        (x_min, y_min, x_max, y_max, _) = rect
+        coord_rect = (x_max, x_min, y_max, y_min, None)
+        return self.__collide_rectangle(coord_rect, self.__root, 0)
+        
+    def __collide_rectangle(self, coord_rect, current_node, dim):
+        '''
+        @param x_min: the minimum x value for this rectangle
+        @param x_max: the maximum x value for this rectangle
+        @param y_min: the minimum y value for this rectangle
+        @param y_max: the maximum y value for this rectangle
+        @return: all of the rectangles intersecting with this rectangle from dim onwards
+        '''
+        (x_max, x_min, y_max, y_min, _) = coord_rect #Reversed for rectangle hunting
+        res = []
+        if current_node==[]:
+            return res
+        #Special case if this is the last dim...
+        if dim==8:
+            #This is a list of rectangles!
+            for (rect_x_min, rect_x_max, rect_y_min, rect_y_max, key) in current_node:
+                if rect_x_min<x_max and rect_x_max>x_min and rect_y_min<y_max and rect_y_max>y_min:
+                    res.append((rect_x_min, rect_x_max, rect_y_min, rect_y_max, key))
+            return res
+        #Now for the other cases...
+        coord = self.__get_coordinate(coord_rect, dim)+1
+        #Loop over...
+        if dim % 2 == 0:
+            #This is a min coordinate. We need all rectangles whose min coordinate is less than our max.
+            #Thus we look in our quadrant, and unconditionally in quadrants less than it
+            res = self.__collide_rectangle(coord_rect,current_node[coord],dim+1)
+            #Add the other results
+            if dim%4==0:
+                new_rect = (self.__width, x_min, y_max, y_min, None)
+            else:
+                new_rect = (x_max, x_min, self.__height, y_min, None)
+            #We change the coordinates so that we intersect against all the other rectangles
+            for min_coord in range(1,coord):
+                res.extend(self.__collide_rectangle(new_rect, current_node[min_coord], dim+1))
+            return res
+        else:
+            #This is a max coordinate, so we need rectangles whose max coordinate is any greater than our min.
+            res = self.__collide_rectangle(coord_rect, current_node[coord], dim+1)
+            #Add the other results
+            if dim%4==1:
+                new_rect = (x_max, 0, y_max, y_min, None)
+            else:
+                new_rect = (x_max, x_min, y_max, 0, None)
+            #Intersect in the other quadrants
+            for max_coord in range(coord+1,5):
+                res.extend(self.__collide_rectangle(new_rect, current_node[max_coord], dim+1))
+            return res
         
     def __is_inside_screen(self, rect):
         '''
