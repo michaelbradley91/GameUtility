@@ -65,7 +65,6 @@ class RectangleTree(object):
             current_node[0]+=1
         #This final list should just have the rectangle added to it, I think...
         current_node[coord].append(rect)
-        print(str(self.__root))
         
     def remove_rectangle(self, rect):
         '''
@@ -73,8 +72,6 @@ class RectangleTree(object):
         tree.
         @param rect: the rectangle to remove from the tree.
         '''
-        print("Starting!!")
-        print(self.__root)
         #Check if it is inside the screen
         if not self.__is_inside_screen(rect):
             return
@@ -98,7 +95,6 @@ class RectangleTree(object):
         current_node[coord].remove(rect)
         #Now we need to correct for the removal...
         removing = current_node[coord]==[]
-        print(self.__root)
         dim = 6 #where we are in the node stack
         while removing and dim>=0:
             #Remove from the current node...
@@ -110,17 +106,14 @@ class RectangleTree(object):
                 dim-=1
             else:
                 removing = False
-            print(self.__root)
         #Correct for the root... (which is allowed to be empty)
         if dim==-1:
             self.__root[0]-=1
         #That should have removed everything...maybe?
-        print(self.__root)
     
-    def collide_rectangle(self, rect, remove=False):
+    def collide_rectangle(self, rect):
         '''
         @param rect: the rectangle to check for collisions against.
-        @param remove: whether or not the returned rectangles should also be removed from the structure.
         @return: all of the rectangles strictly colliding (overlapping by at least one pixel) with the given rect.
         '''
         #Check if it is inside the screen
@@ -130,27 +123,26 @@ class RectangleTree(object):
         rect = self.__convert_rect(rect)
         #We need to return all rectangles on all sides in a recursive manner. We will do this recursively...
         (x_min, y_min, x_max, y_max, _) = rect
-        coord_rect = (x_max, x_min, y_max, y_min, None)
+        coord_rect = (x_max, y_max, x_min, y_min, None)
         return self.__collide_rectangle(coord_rect, self.__root, 0)
         
     def __collide_rectangle(self, coord_rect, current_node, dim):
         '''
-        @param x_min: the minimum x value for this rectangle
-        @param x_max: the maximum x value for this rectangle
-        @param y_min: the minimum y value for this rectangle
-        @param y_max: the maximum y value for this rectangle
+        @param coord_rect: the rectangle with its coordinate representation
+        @param dim: the dimension in the list 
         @return: all of the rectangles intersecting with this rectangle from dim onwards
         '''
-        (x_max, x_min, y_max, y_min, _) = coord_rect #Reversed for rectangle hunting
+        (x_max, y_max, x_min, y_min, _) = coord_rect #Reversed for rectangle hunting
         res = []
         if current_node==[]:
             return res
         #Special case if this is the last dim...
         if dim==8:
             #This is a list of rectangles!
-            for (rect_x_min, rect_x_max, rect_y_min, rect_y_max, key) in current_node:
+            for (rect_x_min, rect_y_min, rect_x_max, rect_y_max,
+                 (rect_org_x_min,rect_org_y_min,rect_org_x_max,rect_org_y_max,key)) in current_node:
                 if rect_x_min<x_max and rect_x_max>x_min and rect_y_min<y_max and rect_y_max>y_min:
-                    res.append((rect_x_min, rect_x_max, rect_y_min, rect_y_max, key))
+                    res.append((rect_org_x_min, rect_org_y_min, rect_org_x_max, rect_org_y_max, key))
             return res
         #Now for the other cases...
         coord = self.__get_coordinate(coord_rect, dim)+1
@@ -161,9 +153,9 @@ class RectangleTree(object):
             res = self.__collide_rectangle(coord_rect,current_node[coord],dim+1)
             #Add the other results
             if dim%4==0:
-                new_rect = (self.__width, x_min, y_max, y_min, None)
+                new_rect = (self.__width, y_max, x_min, y_min, None)
             else:
-                new_rect = (x_max, x_min, self.__height, y_min, None)
+                new_rect = (x_max, self.__height, x_min, y_min, None)
             #We change the coordinates so that we intersect against all the other rectangles
             for min_coord in range(1,coord):
                 res.extend(self.__collide_rectangle(new_rect, current_node[min_coord], dim+1))
@@ -173,9 +165,9 @@ class RectangleTree(object):
             res = self.__collide_rectangle(coord_rect, current_node[coord], dim+1)
             #Add the other results
             if dim%4==1:
-                new_rect = (x_max, 0, y_max, y_min, None)
+                new_rect = (x_max, y_max, 0, y_min, None)
             else:
-                new_rect = (x_max, x_min, y_max, 0, None)
+                new_rect = (x_max, y_max, x_min, 0, None)
             #Intersect in the other quadrants
             for max_coord in range(coord+1,5):
                 res.extend(self.__collide_rectangle(new_rect, current_node[max_coord], dim+1))
@@ -211,8 +203,6 @@ class RectangleTree(object):
         #For convenience:
         width_dividers[16] = self.__width+1 #plus one because we consider being >= to be in the sector
         height_dividers[16] = self.__height+1
-        print(width_dividers)
-        print(height_dividers)
         #This is memory intensive, but simplifies the coordinate calculation...
         self.__width_coordinate = collections.defaultdict(lambda:-1)
         self.__height_coordinate = collections.defaultdict(lambda:-1)

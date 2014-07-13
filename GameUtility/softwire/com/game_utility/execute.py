@@ -58,12 +58,22 @@ class DummyMouseMotionListener(mouse_motion_listeners.MouseMotionListener):
 def run():
     current_milli_time = lambda: int(round(time.time() * 1000))
     '''Run the application!!! (For test purposes)'''
-    tree = rect_tree.RectangleTree((500,1000))
-    tree.insert_rectangle((35,5,50,20,None))
-    tree.insert_rectangle((30,5,50,20,None))
-    tree.remove_rectangle((35,5,50,20,None))
-    tree.remove_rectangle((30,5,50,20,None))
-    tree.remove_rectangle((35,5,50,20,None))
+    tree = rect_tree.RectangleTree((64,64))
+    #Test the rectangle tree!
+    for x in range(0,32):
+        for y in range(0,32):
+            tree.insert_rectangle((x*2,y*2,(x+1)*2,(y+1)*2,None))
+    #tree.insert_rectangle((6, 8, 8, 10,None))
+    #tree.print_tree()
+    #Try a collision
+    res = tree.collide_rectangle((4,4,16,16,None))
+    #tree = rect_tree.RectangleTree((500,1000))
+    #tree.insert_rectangle((0,0,5,5,None))
+    #tree.insert_rectangle((4,4,7,8,None))
+    #tree.insert_rectangle((20,20,26,25,None))
+    #Try colliding a rectangle...
+    #res = tree.collide_rectangle((0,0,5,5,None))
+    print(res); #[0,0,0,0,1,2,2,2]
     '''Initialise the picture handler!'''
     screen.Screen.initialise("My game")
     picture_handler.PictureHandler.initialise()
