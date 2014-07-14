@@ -10,6 +10,7 @@ import softwire.com.game_utility.input_listeners.mouse_motion_listener as mouse_
 import softwire.com.game_utility.graphics.picture_handling.picture_handler as picture_handler
 import pygame.locals
 import softwire.com.game_utility.graphics.picture_handling.rectangle_tree as rect_tree
+import softwire.com.game_utility.graphics.picture_handling.rectangle_filler as rect_filler
 import time
 
 class DummyKeyListener(key_listeners.KeyboardListener):
@@ -58,6 +59,10 @@ class DummyMouseMotionListener(mouse_motion_listeners.MouseMotionListener):
 def run():
     current_milli_time = lambda: int(round(time.time() * 1000))
     '''Run the application!!! (For test purposes)'''
+    #Test the rectangle filler!
+    print(rect_filler.RectangleFiller.fill_grid([
+        (0,0),(0,1),(0,2),(1,1),(2,0),(2,1),(2,2)]))
+    '''
     tree = rect_tree.RectangleTree((64,64))
     #Test the rectangle tree!
     for x in range(0,32):
@@ -74,7 +79,9 @@ def run():
     #Try colliding a rectangle...
     #res = tree.collide_rectangle((0,0,5,5,None))
     print(res); #[0,0,0,0,1,2,2,2]
+    '''
     '''Initialise the picture handler!'''
+    '''
     screen.Screen.initialise("My game")
     picture_handler.PictureHandler.initialise()
     #Create a keyboard listener...
@@ -83,3 +90,4 @@ def run():
     #DummyMouseMotionListener()
     #Start the game loop!
     screen.Screen.start_game_loop()
+    '''
