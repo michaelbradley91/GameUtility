@@ -60,8 +60,8 @@ def run():
     current_milli_time = lambda: int(round(time.time() * 1000))
     '''Run the application!!! (For test purposes)'''
     #Test the rectangle filler!
-    print(rect_filler.RectangleFiller.fill_grid([
-        (0,0),(0,1),(0,2),(1,1),(2,0),(2,1),(2,2)]))
+    #print(rect_filler.RectangleFiller.fill_grid([
+    #    (0,0),(0,1),(0,2),(1,1),(2,0),(2,1),(2,2)]))
     '''
     tree = rect_tree.RectangleTree((64,64))
     #Test the rectangle tree!
@@ -81,7 +81,8 @@ def run():
     print(res); #[0,0,0,0,1,2,2,2]
     '''
     '''Initialise the picture handler!'''
-    '''
+    current_milli_time = lambda: int(round(time.time() * 1000))
+    
     screen.Screen.initialise("My game")
     picture_handler.PictureHandler.initialise()
     #Create a keyboard listener...
@@ -90,4 +91,4 @@ def run():
     #DummyMouseMotionListener()
     #Start the game loop!
     screen.Screen.start_game_loop()
-    '''
+    

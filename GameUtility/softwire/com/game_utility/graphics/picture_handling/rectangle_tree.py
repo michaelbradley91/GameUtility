@@ -71,10 +71,11 @@ class RectangleTree(object):
         Remove a rectangle from the tree. This has no effect if the exact rectangle given does not exist in the
         tree.
         @param rect: the rectangle to remove from the tree.
+        @return: true iff the rectangle was removed, since it was in the tree
         '''
         #Check if it is inside the screen
         if not self.__is_inside_screen(rect):
-            return
+            return False
         #Convert the rectangle
         rect = self.__convert_rect(rect)
         #Now we search for where the rectangle should exist...
@@ -85,14 +86,16 @@ class RectangleTree(object):
             coord = self.__get_coordinate(rect, dim)+1
             #Construct the node if necessary
             if current_node[coord]==[]:
-                return #does not exist
+                return False #does not exist
             current_node = current_node[coord]
             node_stack.append(current_node)
         coord = self.__get_coordinate(rect, 7)+1
         if current_node[coord]==[]:
-            return #does not exist
+            return False #does not exist
         #Remove the rectangle...
-        current_node[coord].remove(rect)
+        was_removed = rect in current_node[coord]
+        if was_removed:
+            current_node[coord].remove(rect)
         #Now we need to correct for the removal...
         removing = current_node[coord]==[]
         dim = 6 #where we are in the node stack
@@ -109,7 +112,7 @@ class RectangleTree(object):
         #Correct for the root... (which is allowed to be empty)
         if dim==-1:
             self.__root[0]-=1
-        #That should have removed everything...maybe?
+        return was_removed
     
     def collide_rectangle(self, rect):
         '''

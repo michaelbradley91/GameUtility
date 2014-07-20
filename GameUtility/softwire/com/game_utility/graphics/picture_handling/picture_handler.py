@@ -46,6 +46,9 @@ that the panes themselves will always be drawn in the right order...
 import softwire.com.game_utility.graphics.screen as screen
 import pygame
 import threading
+import collections
+import softwire.com.game_utility.graphics.picture_handling.rectangle_tree as rectangle_tree
+import softwire.com.game_utility.graphics.picture_handling.rectangle_filler as rectangle_filler
 
 class Drawer(object):
     '''
@@ -105,12 +108,32 @@ class PictureHandler(object):
     #will be drawn in a consistent order.
     __unique_id = 0L
     
+    #The number of width divisions along the screen
+    __WIDTH_DIVISION = 32;
+    #The number of height divisions along the screen
+    __HEIGHT_DIVISION = 16;
+    
+    #The list of rectangles to fill the screen rectangle tree
+    __SCREEN_RECTANGLES = []
+    
+    #Storing the conversion back to the screen coordinates
+    __MIN_X_COORD_SCREEN_CONVERSION = collections.defaultdict(lambda:0)
+    __MAX_X_COORD_SCREEN_CONVERSION = collections.defaultdict(lambda:0)
+    __MIN_Y_COORD_SCREEN_CONVERSION = collections.defaultdict(lambda:0)
+    __MAX_Y_COORD_SCREEN_CONVERSION = collections.defaultdict(lambda:0)
+    
+    #The screen rectangle tree
+    __screen_rectangle_tree = None
+    #The rectangles that need to be added to the tree...
+    __screen_rectangles_to_add = []
+    
     @staticmethod
     def initialise():
         '''
         Initialise the picture handler. This should be done strictly after the screen has been
         initialised, and strictly before any requests are made to the picture handler.
-        This should only be called once
+        This should only be called once.
+        Note that the screen should be at least 32 * 32 pixels.
         '''
         if PictureHandler.__initialised:
             raise ValueError("Cannot initialise the picture handler more than once")
@@ -123,9 +146,124 @@ class PictureHandler(object):
         PictureHandler.__picture.fill(PictureHandler.__background_colour)
         #Assign self as the picture handler
         screen.Screen.set_picture_handler(PictureHandler.__handler)
+        #Initialise the grid mechanism
+        PictureHandler.__initialise_grid()
         #Remember we did this!
         PictureHandler.__initialised = True
         
+    @staticmethod
+    def __initialise_grid():
+        '''
+        Populates the grid rectangle tree and sets the "arrays" (default dictionaries)
+        '''
+        #Firstly, figure out the width and height dividers again...
+        (screen_width,screen_height) = PictureHandler.__size
+        #For convenience
+        width_div = PictureHandler.__WIDTH_DIVISION
+        height_div = PictureHandler.__HEIGHT_DIVISION
+        #Now fill the arrays...
+        #Divide by the width
+        width_dividers = collections.defaultdict(lambda:0)
+        width_division = screen_width / width_div
+        for i in range(0,width_div):
+            width_dividers[i] = i * width_division
+        for i in range(0,screen_width % width_div): #the remainder
+            width_dividers[width_div-(1+i)] = width_dividers[width_div-(1+i)] + (screen_width % width_div) - i
+        #Repeat for the height
+        height_dividers = collections.defaultdict(lambda:0)
+        height_division = screen_height / height_div
+        for i in range(0,height_div):
+            height_dividers[i] = i * height_division
+        for i in range(0,screen_height % height_div): #the remainder
+            height_dividers[height_div-(i+1)] = height_dividers[height_div-(i+1)] + (screen_height % height_div) - i
+        #For convenience:
+        width_dividers[width_div] = screen_width #plus one because we consider being >= to be in the sector
+        height_dividers[height_div] = screen_height
+        #Now calculate the rectangles...
+        for x in range(0,width_div):
+            for y in range(0,height_div):
+                #Figure out the rectangle in its (x_min,y_min,x_max,y_max) form
+                x_min = width_dividers[x]
+                x_max = width_dividers[x+1]
+                y_min = height_dividers[y]
+                y_max = height_dividers[y+1]
+                #Use the key to remember the coordinates
+                rect = (x_min,y_min,x_max,y_max,(x,y))
+                PictureHandler.__SCREEN_RECTANGLES.append(rect)
+        
+        #We will receive the rectangle coordinates, and would like to know where they fit
+        #in the grid. We store this for speed
+        for x in range(0,width_div):
+            PictureHandler.__MIN_X_COORD_SCREEN_CONVERSION[x] = width_dividers[x]
+            PictureHandler.__MAX_X_COORD_SCREEN_CONVERSION[x] = width_dividers[x+1]
+        for y in range(0,height_div):
+            PictureHandler.__MIN_Y_COORD_SCREEN_CONVERSION[y] = height_dividers[y]
+            PictureHandler.__MAX_Y_COORD_SCREEN_CONVERSION[y] = height_dividers[y+1]
+        #Fill the tree
+        PictureHandler.__screen_rectangles_to_add = PictureHandler.__SCREEN_RECTANGLES
+        PictureHandler.__screen_rectangle_tree = rectangle_tree.RectangleTree(PictureHandler.__size)
+        #Fill it
+        PictureHandler.__fill_screen_tree()
+        
+    @staticmethod
+    def __fill_screen_tree():
+        '''
+        Fill the rectangle tree for the screen (not the images)
+        '''
+        for rect in PictureHandler.__screen_rectangles_to_add:
+            PictureHandler.__screen_rectangle_tree.insert_rectangle(rect)
+        #Really simple
+    
+    @staticmethod
+    def __add_to_screen(rect):
+        '''
+        Add a given rectangle to the screen
+        @param rect: the rectangle to add in the form of (x_min, y_min, x_max, y_max)
+        '''
+        (x_min,y_min,x_max,y_max) = rect
+        #Add a dummy key
+        rect = (x_min,y_min,x_max,y_max,None)
+        #Add the rectangle to the screen rectangle tree by colliding it first
+        collided_rects = PictureHandler.__screen_rectangle_tree.collide_rectangle(rect)
+        #Now remove the collided rectangles
+        for rect in collided_rects:
+            was_removed = PictureHandler.__screen_rectangle_tree.remove_rectangle(rect)
+            if was_removed:
+                PictureHandler.__screen_rectangles_to_add.append(rect)
+        #Done!
+        
+    @staticmethod
+    def __calculate_screen_update_list():
+        '''
+        Given the rectangles which have been added to the screen,
+        this calculates a list of rectangles specifying the areas which need
+        to be updated.
+        This should only be called once per frame, since it resets itself.
+        @return: a list of rectangles to use to update the screen, in the form
+        of (x_min, y_min, x_max, y_max, None) (key for the next tree)
+        '''
+        #Firstly, gather the coordinates and update the screen rectangle tree...
+        coords = []
+        for rect in PictureHandler.__screen_rectangles_to_add:
+            (_,_,_,_,(x,y)) = rect
+            coords.append((x,y))
+            #Now fill the rectangle tree again
+            PictureHandler.__screen_rectangle_tree.insert_rectangle(rect)
+        #Empty the update list
+        PictureHandler.__screen_rectangles_to_add = []
+        #Calculate the covering rectangles...
+        covering_rects = rectangle_filler.RectangleFiller.fill_grid(coords)
+        #Recalculate from these rectangles the screen rectangles to update against...
+        screen_rects = []
+        for (x_coord_min, y_coord_min, x_coord_max, y_coord_max) in covering_rects:
+            screen_rects.append(PictureHandler.__MIN_X_COORD_SCREEN_CONVERSION[x_coord_min],
+                                PictureHandler.__MAX_X_COORD_SCREEN_CONVERSION[x_coord_max],
+                                PictureHandler.__MIN_Y_COORD_SCREEN_CONVERSION[y_coord_min],
+                                PictureHandler.__MAX_Y_COORD_SCREEN_CONVERSION[y_coord_max],
+                                None)
+        #Got them all!
+        return screen_rects
+                       
     @staticmethod
     def _get_picture():
         '''
@@ -140,6 +278,7 @@ class PictureHandler(object):
         Called by the screen after the picture has been drawn successfully
         '''
         PictureHandler.__picture_lock.release()
+        
         return
     
     @staticmethod
