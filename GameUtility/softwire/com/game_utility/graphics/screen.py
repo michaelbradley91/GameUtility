@@ -25,7 +25,9 @@ class _PictureHandler(object):
     def get_picture(self):
         '''
         By default, this returns the background image.
-        @return: the picture to be displayed on screen. Note that no explicit handling of the background
+        @return: (picture, update_list) - the picture to be displayed on screen
+        and a list of rectangles to update the screen.
+        Note that no explicit handling of the background
         is performed here, so it will appear exactly as is.
         '''
         return Screen._background
@@ -216,7 +218,10 @@ class Screen(object):
                 # Update the screen according to the update list
                 Screen._lock.acquire()
                 try:
-                    Screen.__screen.blit(Screen.__picture_handler.get_picture(), (0,0))
+                    #Remember the updates...
+                    (picture, updates) = Screen.__picture_handler.get_picture()
+                    Screen.__update_list = updates
+                    Screen.__screen.blit(picture, (0,0))
                     Screen.__picture_handler.picture_drawn()
                 except Exception, e:
                     Screen._lock.release()

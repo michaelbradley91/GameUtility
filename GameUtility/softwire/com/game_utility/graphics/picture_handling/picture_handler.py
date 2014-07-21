@@ -64,8 +64,10 @@ class Drawer(object):
     def redraw(self, top_left, surface):
         '''
         Called by the picture handler when this object needs to redraw itself
-        on the surface provided.
+        on the surface provided. No interaction with the picture handler is allowed
+        if you are drawing - this will cause deadlock (no registrations or deregistrations)
         @param top_left: the top left coordinate of the surface as it will be blitted to the screen
+        (Surface begins at 0,0)
         @param surface: the surface to drawn on. Other than drawing itself, the surface should
         not be tampered with. Get the clip area to see the rectangle in which the drawing is
         actually occurring if you can exploit that for efficiency.
@@ -122,10 +124,15 @@ class PictureHandler(object):
     __MIN_Y_COORD_SCREEN_CONVERSION = collections.defaultdict(lambda:0)
     __MAX_Y_COORD_SCREEN_CONVERSION = collections.defaultdict(lambda:0)
     
-    #The screen rectangle tree
+    #The screen rectangle tree (divides the screen up into a grid)
     __screen_rectangle_tree = None
+    #The picture rectangle tree
+    __picture_rectangle_tree = None
     #The rectangles that need to be added to the tree...
     __screen_rectangles_to_add = []
+    
+    #A map from the drawer to the rectangles...
+    __drawer_to_rectangles_map = None
     
     @staticmethod
     def initialise():
@@ -148,6 +155,8 @@ class PictureHandler(object):
         screen.Screen.set_picture_handler(PictureHandler.__handler)
         #Initialise the grid mechanism
         PictureHandler.__initialise_grid()
+        #Setup the rectangle to drawer map
+        __drawer_to_rectangles_map = collections.defaultdict(lambda:None)
         #Remember we did this!
         PictureHandler.__initialised = True
         
@@ -204,6 +213,8 @@ class PictureHandler(object):
         PictureHandler.__screen_rectangle_tree = rectangle_tree.RectangleTree(PictureHandler.__size)
         #Fill it
         PictureHandler.__fill_screen_tree()
+        #Finally set up the picture rectangle tree...
+        PictureHandler.__picture_rectangle_tree = rectangle_tree.RectangleTree(PictureHandler.__size)
         
     @staticmethod
     def __fill_screen_tree():
@@ -263,6 +274,33 @@ class PictureHandler(object):
                                 None)
         #Got them all!
         return screen_rects
+    
+    @staticmethod
+    def __update_surface_slab(surface,rect):
+        '''
+        Update a slab of the surface according to whatever needs to be drawn!
+        @param surface: the surface everything should be drawn on
+        @param rect: the rectangle on the original screen that the surface will be blitted to.
+        Should be of the form (x_min,y_min,x_max,y_max)
+        '''
+        (x_min,y_min,x_max,y_max) = rect
+        #Now work out everyone who needs to redraw...
+        collided_rectangles = PictureHandler.__picture_rectangle_tree.collide_rectangle((x_min,y_min,x_max,y_max,None))
+        #Gather them up, and order them by depth
+        collided_list = []
+        collided_set = set()
+        for (_,(depth,unique_id,drawer)) in collided_rectangles:
+            collided_set.add(((depth,unique_id),drawer))
+        #Convert to a list
+        for elem in collided_set:
+            collided_list.append(elem)
+        #Sort by the first element only
+        collided_list.sort(key=lambda tup: tup[0])
+        #Now we call the redraw methods appropriately...
+        for (_,drawer) in collided_list:
+            #Redraw!
+            drawer.redraw((x_min,y_min),surface)
+        #That should be everything...
                        
     @staticmethod
     def _get_picture():
@@ -270,7 +308,27 @@ class PictureHandler(object):
         Called by the screen when the picture needs to be drawn
         '''
         PictureHandler.__picture_lock.acquire()
-        return PictureHandler.__picture
+        #Now we calculate the updates...
+        update_rects = PictureHandler.__calculate_screen_update_list()
+        converted_update_list = [] #other form of rectangle...
+        #Refill the screen tree
+        PictureHandler.__fill_screen_tree()
+        #Now collide the update rects to get the redrawing stuff...
+        for (x_min,y_min,x_max,y_max) in update_rects:
+            #Calculate the size of the surface we need
+            (width,height) = (x_max-x_min,y_max-y_min)
+            #Draw the background first...
+            picture_slab = pygame.Surface((width,height))
+            picture_slab = picture_slab.convert()
+            picture_slab.fill(PictureHandler.__background_colour)
+            #Ready to perform the updates!!
+            PictureHandler.__update_surface_slab(picture_slab,(x_min,y_min,x_max,y_max))
+            #Finally, blit it to the picture and register the update...
+            PictureHandler.__picture.blit(picture_slab,(x_min,y_min))
+            #Should have worked I think...
+            converted_update_list.append((x_min,y_min,width,height))
+        #Return the relevant stuff...
+        return (PictureHandler.__picture,converted_update_list)
     
     @staticmethod
     def _picture_drawn():
@@ -278,8 +336,25 @@ class PictureHandler(object):
         Called by the screen after the picture has been drawn successfully
         '''
         PictureHandler.__picture_lock.release()
-        
         return
+    
+    @staticmethod
+    def __deregister_rectangles(drawer):
+        '''
+        Exactly the same as deregister_rectangles - but does not acquire the synchronising lock
+        @param drawer: the drawer to deregister. Note that undoing any updates triggered
+        is too complex to be worth the trouble...
+        '''
+        #Get the rectangles...
+        rects = PictureHandler.__drawer_to_rectangles_map[drawer]
+        if (rects==None):
+            #Already deregistered
+            return
+        #Remove them from the tree...
+        for rect in rects:
+            PictureHandler.__picture_rectangle_tree.remove_rectangle(rect)
+        #Now remove the key value...
+        PictureHandler.__drawer_to_rectangles_map[drawer] = None
     
     @staticmethod
     def register_rectangles(drawer, rectangles, depth):
@@ -289,13 +364,46 @@ class PictureHandler(object):
         You can use multiple rectangles to approximate shapes, although using too many
         is discouraged as it will slow down the processing speed (especially if they are regularly
         being re-registered and moved...)
+        Rectangles should be of the form (x_min,y_min,width,height)
+        Note that an attempt to register twice will remove the previous registration!!!
         @param drawer: the drawer to register with the rectangles.
         @param rectangles: a list of rectangles covering the area the drawer might draw in.
         @param depth: the depth of this object in the picture. Objects with a greater
         depth value will appear behind objects with a smaller depth value. Negative values
         are allowed, and the background colour will always be drawn behind all objects.
         '''
-        pass
+        PictureHandler.__picture_lock.acquire()
+        #Firstly, check the map to see if we need to deregister first...
+        if PictureHandler.__drawer_to_rectangles_map[drawer]!=None:
+            #Unregister first!
+            PictureHandler.__deregister_rectangles(drawer)
+        #Update the unique identifier...
+        unique_id = PictureHandler.__unique_id
+        PictureHandler.__unique_id+=1 #renew
+        #Add the key (the depth + unique_id + drawer) to the rectangles...
+        conv_rects = []
+        for (x_min,y_min,width,height) in rectangles:
+            x_max = x_min+width
+            y_max = y_min+height
+            #Add to the screen for the updates
+            '''
+            Note: this method doesn't need the key since it is
+            calculating the screen update rectangles. These are separate rectangles.
+            The rectangle passed in is not stored.
+            '''
+            PictureHandler.__add_to_screen((x_min,y_min,x_max,y_max))
+            conv_rects.append((x_min,y_min,x_max,y_max,(depth,unique_id,drawer)))
+        PictureHandler.__drawer_to_rectangles_map[drawer] = conv_rects
+        #Push the rectangles into the picture tree
+        for rect in conv_rects:
+            '''
+            The picture_rectangle_tree is used when the screen update rectangles
+            have been calculated. These are collided with the rectangles in the picture
+            rectangle tree to decide who needs to be redrawn.
+            '''
+            PictureHandler.__picture_rectangle_tree.insert_rectangle(rect)
+        #That should be everything..?
+        PictureHandler.__picture_lock.release()
     
     @staticmethod
     def deregister_rectangles(drawer):
@@ -305,5 +413,8 @@ class PictureHandler(object):
         again before deregistration completes as a lock may be held on the picture.
         @param drawer: the drawer to erase from the picture.
         '''
-        pass
+        PictureHandler.__picture_lock.acquire()
+        #We should call the auxiliary...
+        PictureHandler.__deregister_rectangles(drawer)
+        PictureHandler.__picture_lock.release()
     
