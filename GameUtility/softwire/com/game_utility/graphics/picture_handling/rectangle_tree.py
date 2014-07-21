@@ -121,7 +121,7 @@ class RectangleTree(object):
         '''
         #Check if it is inside the screen
         if not self.__is_inside_screen(rect):
-            return
+            return []
         #Convert the rectangle
         rect = self.__convert_rect(rect)
         #We need to return all rectangles on all sides in a recursive manner. We will do this recursively...

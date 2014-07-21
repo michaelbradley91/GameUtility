@@ -11,6 +11,7 @@ import softwire.com.game_utility.graphics.picture_handling.picture_handler as pi
 import pygame.locals
 import softwire.com.game_utility.graphics.picture_handling.rectangle_tree as rect_tree
 import softwire.com.game_utility.graphics.picture_handling.rectangle_filler as rect_filler
+import softwire.com.game_utility.graphics.drawers.rectangle_drawer as rectangle_drawer
 import time
 
 class DummyKeyListener(key_listeners.KeyboardListener):
@@ -85,6 +86,8 @@ def run():
     
     screen.Screen.initialise("My game",(100,100,100))
     picture_handler.PictureHandler.initialise()
+    #Draw a rectangle!!
+    rectangle_drawer.RectangleDrawer((5,5,100,100),(255,0,0))
     #Create a keyboard listener...
     DummyKeyListener([pygame.locals.K_ESCAPE])
     DummyMouseButtonListener()

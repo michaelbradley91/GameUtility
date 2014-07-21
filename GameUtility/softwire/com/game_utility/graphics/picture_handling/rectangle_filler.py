@@ -55,7 +55,6 @@ class RectangleFiller(object):
             self.__look_up = collections.defaultdict(lambda:None)
             #Construct the list in order
             prev_node = None
-            print("Got coords " + str(coords))
             coords.sort()
             for coord in coords:
                 node = RectangleFiller._TraversableList._Node(coord,None,prev_node)

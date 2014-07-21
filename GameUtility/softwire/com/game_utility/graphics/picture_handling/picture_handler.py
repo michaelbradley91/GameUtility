@@ -41,6 +41,9 @@ lots of small rectangles inside a large rectangle. Unfortunately, this seems to 
 
 TODO: create drawing panes to ensure that certain objects can always be drawn, so
 that the panes themselves will always be drawn in the right order...
+
+TODO: currently ignoring alphas and so only permitting colour keys... not sure how much
+I care...
 '''
 
 import softwire.com.game_utility.graphics.screen as screen
@@ -156,7 +159,7 @@ class PictureHandler(object):
         #Initialise the grid mechanism
         PictureHandler.__initialise_grid()
         #Setup the rectangle to drawer map
-        __drawer_to_rectangles_map = collections.defaultdict(lambda:None)
+        PictureHandler.__drawer_to_rectangles_map = collections.defaultdict(lambda:None)
         #Remember we did this!
         PictureHandler.__initialised = True
         
@@ -236,13 +239,16 @@ class PictureHandler(object):
         #Add a dummy key
         rect = (x_min,y_min,x_max,y_max,None)
         #Add the rectangle to the screen rectangle tree by colliding it first
+        #TODO REMOVE print("Adding rectangle " + str(rect))
         collided_rects = PictureHandler.__screen_rectangle_tree.collide_rectangle(rect)
+        #TODO REMOVE print("Got collided rectangles " + str(collided_rects))
         #Now remove the collided rectangles
         for rect in collided_rects:
             was_removed = PictureHandler.__screen_rectangle_tree.remove_rectangle(rect)
             if was_removed:
                 PictureHandler.__screen_rectangles_to_add.append(rect)
         #Done!
+        #TODO REMOVE print("Got update list as " + str(PictureHandler.__screen_rectangles_to_add))
         
     @staticmethod
     def __calculate_screen_update_list():
@@ -254,6 +260,7 @@ class PictureHandler(object):
         @return: a list of rectangles to use to update the screen, in the form
         of (x_min, y_min, x_max, y_max, None) (key for the next tree)
         '''
+        #TODO REMOVE print("Calculating update list")
         #Firstly, gather the coordinates and update the screen rectangle tree...
         coords = []
         for rect in PictureHandler.__screen_rectangles_to_add:
@@ -262,17 +269,19 @@ class PictureHandler(object):
             #Now fill the rectangle tree again
             PictureHandler.__screen_rectangle_tree.insert_rectangle(rect)
         #Empty the update list
+        #TODO REMOVE print("Filling coords " + str(coords))
         PictureHandler.__screen_rectangles_to_add = []
         #Calculate the covering rectangles...
         covering_rects = rectangle_filler.RectangleFiller.fill_grid(coords)
+        #TODO REMOVE print("Got covering rectangles " + str(covering_rects))
         #Recalculate from these rectangles the screen rectangles to update against...
         screen_rects = []
         for (x_coord_min, y_coord_min, x_coord_max, y_coord_max) in covering_rects:
             screen_rects.append((PictureHandler.__MIN_X_COORD_SCREEN_CONVERSION[x_coord_min],
-                                 PictureHandler.__MAX_X_COORD_SCREEN_CONVERSION[x_coord_max],
                                  PictureHandler.__MIN_Y_COORD_SCREEN_CONVERSION[y_coord_min],
-                                 PictureHandler.__MAX_Y_COORD_SCREEN_CONVERSION[y_coord_max],
-                                 None))
+                                 PictureHandler.__MAX_X_COORD_SCREEN_CONVERSION[x_coord_max],
+                                 PictureHandler.__MAX_Y_COORD_SCREEN_CONVERSION[y_coord_max]))
+        #TODO REMOVE print("Got screen update rectangles as " + str(screen_rects))
         #Got them all!
         return screen_rects
     
@@ -290,7 +299,8 @@ class PictureHandler(object):
         #Gather them up, and order them by depth
         collided_list = []
         collided_set = set()
-        for (_,(depth,unique_id,drawer)) in collided_rectangles:
+        #TODO REMOVE print("Got collided rectangles " + str(collided_rectangles))
+        for (_,_,_,_,(depth,unique_id,drawer)) in collided_rectangles:
             collided_set.add(((depth,unique_id),drawer))
         #Convert to a list
         for elem in collided_set:
@@ -309,11 +319,9 @@ class PictureHandler(object):
         Called by the screen when the picture needs to be drawn
         '''
         PictureHandler.__picture_lock.acquire()
-        #Now we calculate the updates...
+        #Now we calculate the updates... (refills tree automatically atm)
         update_rects = PictureHandler.__calculate_screen_update_list()
         converted_update_list = [] #other form of rectangle...
-        #Refill the screen tree
-        PictureHandler.__fill_screen_tree()
         #Now collide the update rects to get the redrawing stuff...
         for (x_min,y_min,x_max,y_max) in update_rects:
             #Calculate the size of the surface we need
@@ -322,6 +330,7 @@ class PictureHandler(object):
             picture_slab = pygame.Surface((width,height))
             picture_slab = picture_slab.convert()
             picture_slab.fill(PictureHandler.__background_colour)
+            #TODO REMOVE print("Made update slab with size " + str((width,height)))
             #Ready to perform the updates!!
             PictureHandler.__update_surface_slab(picture_slab,(x_min,y_min,x_max,y_max))
             #Finally, blit it to the picture and register the update...
@@ -329,6 +338,7 @@ class PictureHandler(object):
             #Should have worked I think...
             converted_update_list.append((x_min,y_min,width,height))
         #Return the relevant stuff...
+        #TODO REMOVE print("Requesting screen updates on " + str(converted_update_list))
         return (PictureHandler.__picture,converted_update_list)
     
     @staticmethod
@@ -379,6 +389,7 @@ class PictureHandler(object):
         #Firstly, check the map to see if we need to deregister first...
         if PictureHandler.__drawer_to_rectangles_map[drawer]!=None:
             #Unregister first!
+            #TODO REMOVE print("Deregistering!")
             PictureHandler.__deregister_rectangles(drawer)
         #Update the unique identifier...
         unique_id = PictureHandler.__unique_id
