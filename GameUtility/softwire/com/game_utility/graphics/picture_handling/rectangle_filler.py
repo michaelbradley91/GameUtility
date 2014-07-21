@@ -55,6 +55,7 @@ class RectangleFiller(object):
             self.__look_up = collections.defaultdict(lambda:None)
             #Construct the list in order
             prev_node = None
+            print("Got coords " + str(coords))
             coords.sort()
             for coord in coords:
                 node = RectangleFiller._TraversableList._Node(coord,None,prev_node)
@@ -117,6 +118,9 @@ class RectangleFiller(object):
         'Note: if the number of grid coordinates passed in is M, this runs in O(MlogM).'
         'It is possible to get this to run in O(N) for N the size of the grid, but I imagine'
         'this is typically worse...?'
+        if grid==[]:
+            #Nothing to do... (special case must be handled for correctness)
+            return []
         #Construct the list for the specialised order of one traversal...
         traversable_list = RectangleFiller._TraversableList(grid)
         rect_list = []

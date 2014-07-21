@@ -213,6 +213,7 @@ class PictureHandler(object):
         PictureHandler.__screen_rectangle_tree = rectangle_tree.RectangleTree(PictureHandler.__size)
         #Fill it
         PictureHandler.__fill_screen_tree()
+        PictureHandler.__screen_rectangles_to_add = [] #don't update on this...
         #Finally set up the picture rectangle tree...
         PictureHandler.__picture_rectangle_tree = rectangle_tree.RectangleTree(PictureHandler.__size)
         
@@ -267,11 +268,11 @@ class PictureHandler(object):
         #Recalculate from these rectangles the screen rectangles to update against...
         screen_rects = []
         for (x_coord_min, y_coord_min, x_coord_max, y_coord_max) in covering_rects:
-            screen_rects.append(PictureHandler.__MIN_X_COORD_SCREEN_CONVERSION[x_coord_min],
-                                PictureHandler.__MAX_X_COORD_SCREEN_CONVERSION[x_coord_max],
-                                PictureHandler.__MIN_Y_COORD_SCREEN_CONVERSION[y_coord_min],
-                                PictureHandler.__MAX_Y_COORD_SCREEN_CONVERSION[y_coord_max],
-                                None)
+            screen_rects.append((PictureHandler.__MIN_X_COORD_SCREEN_CONVERSION[x_coord_min],
+                                 PictureHandler.__MAX_X_COORD_SCREEN_CONVERSION[x_coord_max],
+                                 PictureHandler.__MIN_Y_COORD_SCREEN_CONVERSION[y_coord_min],
+                                 PictureHandler.__MAX_Y_COORD_SCREEN_CONVERSION[y_coord_max],
+                                 None))
         #Got them all!
         return screen_rects
     
@@ -310,6 +311,7 @@ class PictureHandler(object):
         PictureHandler.__picture_lock.acquire()
         #Now we calculate the updates...
         update_rects = PictureHandler.__calculate_screen_update_list()
+        print("Updating rectangles " + str(update_rects))
         converted_update_list = [] #other form of rectangle...
         #Refill the screen tree
         PictureHandler.__fill_screen_tree()

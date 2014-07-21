@@ -7,6 +7,7 @@ Created on 4 Jul 2014
 import pygame.locals
 import collections
 import threading
+import sys, traceback
 
 if not pygame.font: print 'Warning, fonts disabled'
 if not pygame.mixer: print 'Warning, sound disabled'
@@ -219,7 +220,9 @@ class Screen(object):
                 Screen._lock.acquire()
                 try:
                     #Remember the updates...
+                    print("Trying to get updates")
                     (picture, updates) = Screen.__picture_handler.get_picture()
+                    print("Got updates")
                     Screen.__update_list = updates
                     Screen.__screen.blit(picture, (0,0))
                     Screen.__picture_handler.picture_drawn()
@@ -302,6 +305,9 @@ class Screen(object):
         pygame.quit()
         #If there was no exception, quit calmly, but otherwise re-raise
         if not exception==None:
+            # Print the error and quit
+            tb = sys.exc_info()[2]
+            traceback.print_exception(exception.__class__, exception, tb)
             raise exception
         
     @staticmethod

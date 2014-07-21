@@ -83,7 +83,7 @@ def run():
     '''Initialise the picture handler!'''
     current_milli_time = lambda: int(round(time.time() * 1000))
     
-    screen.Screen.initialise("My game")
+    screen.Screen.initialise("My game",(100,100,100))
     picture_handler.PictureHandler.initialise()
     #Create a keyboard listener...
     DummyKeyListener([pygame.locals.K_ESCAPE])
