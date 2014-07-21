@@ -220,9 +220,7 @@ class Screen(object):
                 Screen._lock.acquire()
                 try:
                     #Remember the updates...
-                    print("Trying to get updates")
                     (picture, updates) = Screen.__picture_handler.get_picture()
-                    print("Got updates")
                     Screen.__update_list = updates
                     Screen.__screen.blit(picture, (0,0))
                     Screen.__picture_handler.picture_drawn()

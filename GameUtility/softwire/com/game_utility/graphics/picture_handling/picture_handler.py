@@ -311,7 +311,6 @@ class PictureHandler(object):
         PictureHandler.__picture_lock.acquire()
         #Now we calculate the updates...
         update_rects = PictureHandler.__calculate_screen_update_list()
-        print("Updating rectangles " + str(update_rects))
         converted_update_list = [] #other form of rectangle...
         #Refill the screen tree
         PictureHandler.__fill_screen_tree()
