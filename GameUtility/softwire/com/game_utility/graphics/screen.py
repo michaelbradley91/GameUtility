@@ -67,6 +67,7 @@ class Screen(object):
     __keyboard_listeners = collections.defaultdict(lambda : None)
     __mouse_motion_listeners = set()
     __mouse_button_listeners = set()
+    __frame_listeners = set()
     
     #These are the sets of listeners to be removed or added
     _keyboard_listeners_to_remove = set()
@@ -75,6 +76,8 @@ class Screen(object):
     _mouse_motion_listeners_to_add = set()
     _mouse_button_listeners_to_remove = set()
     _mouse_button_listeners_to_add = set()
+    _frame_listeners_to_remove = set()
+    _frame_listeners_to_add = set()
     
     #A lock for synchronisation on all methods...
     _lock = threading.Lock()
@@ -216,6 +219,9 @@ class Screen(object):
                         #Mouse button listeners
                         for listener in Screen.__mouse_button_listeners:
                             listener.handle_event(event)
+                #Activate the step events...
+                for listener in Screen.__frame_listeners:
+                    listener.handle_event()
                 # Update the screen according to the update list
                 Screen._lock.acquire()
                 try:
@@ -275,6 +281,10 @@ class Screen(object):
                 Screen.__mouse_motion_listeners.add(listener)
             for listener in Screen._mouse_motion_listeners_to_remove:
                 Screen.__mouse_motion_listeners.remove(listener)
+            for listener in Screen._frame_listeners_to_add:
+                Screen.__frame_listeners.add(listener)
+            for listener in Screen._frame_listeners_to_remove:
+                Screen.__frame_listeners.remove(listener)
             #Empty the lists...
             Screen._keyboard_listeners_to_add.clear()
             Screen._keyboard_listeners_to_remove.clear()
@@ -282,6 +292,8 @@ class Screen(object):
             Screen._mouse_button_listeners_to_remove.clear()
             Screen._mouse_motion_listeners_to_add.clear()
             Screen._mouse_motion_listeners_to_remove.clear()
+            Screen._frame_listeners_to_add.clear()
+            Screen._frame_listeners_to_remove.clear()
             #See if we need to quit...
             if Screen.__must_quit:
                 Screen._lock.release()
@@ -454,4 +466,43 @@ class _MouseButtonListener(object):
         @param event: the mouse motion event
         '''
         self.event_handler(event)
+        
+class _FrameListener(object):
+    '''
+    A "private" version of the frame listener class. You are not meant to subclass this class!! (or use it...)
+    There's a lot for the screen to handle, so this is just a skeleton class
+    '''
+
+    def __init__(self, event_handler):
+        '''
+        Create a frame listener
+        @param event_handler: the method to be called when a frame occurs
+        '''
+        self.event_handler = event_handler
+        
+    def register(self):
+        '''
+        Register this listener to the screen
+        '''
+        Screen._lock.acquire()
+        if self in Screen._frame_listeners_to_remove:
+            Screen._frame_listeners_to_remove.remove(self)
+        Screen._frame_listeners_to_add.add(self)
+        Screen._lock.release()
+        
+    def deregister(self):
+        '''
+        Deregister this listener from the screen (don't deregister twice)
+        '''
+        Screen._lock.acquire()
+        Screen._frame_listeners_to_remove.add(self)
+        if self in Screen._frame_listeners_to_add:
+            Screen._frame_listeners_to_add.remove(self)
+        Screen._lock.release()
+    
+    def handle_event(self):
+        '''
+        Handle a mouse motion event somehow!
+        '''
+        self.event_handler()
         

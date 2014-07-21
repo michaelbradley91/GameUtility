@@ -180,9 +180,10 @@ class RectangleTree(object):
         '''
         @param rect: the rectangle to check
         @return: true iff the rectangle is actually inside the screen (at least in part)
+        Also catches zero width or zero height
         '''
         (x_min, y_min, x_max, y_max, _) = rect
-        return x_max>0 and y_max>0 and x_min<self.__width and y_min<self.__height
+        return x_max>0 and y_max>0 and x_min<self.__width and y_min<self.__height and x_max!=x_min and y_max!=y_min
         
     def __divide_screen(self):
         '''

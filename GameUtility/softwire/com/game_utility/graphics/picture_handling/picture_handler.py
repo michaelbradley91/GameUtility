@@ -55,7 +55,12 @@ import softwire.com.game_utility.graphics.picture_handling.rectangle_filler as r
 
 class Drawer(object):
     '''
-    This class is an interface for an object which wishes to draw itself into the picture
+    This class is an interface for an object which wishes to draw itself into the picture.
+    Note that it is best to stick to the same drawer if you are "moving" the drawn image.
+    The drawer itself determines whether or not it appears on top of another drawer
+    on the screen in the event of a tie in the depth. Thus, if you want the image to be drawn
+    in a consistent order with other images, stick to the same drawer!
+    (Or be more explicit about the depth...)
     '''
     
     def __init__(self):
@@ -76,6 +81,35 @@ class Drawer(object):
         actually occurring if you can exploit that for efficiency.
         '''
         pass
+    
+    #The unique id assigned to the different picture handlers
+    #Note: python will convert this to a big integer if it starts to overflow!
+    __unique_static_id = 0L
+    #Lock for thread safety (redundant but doesn't add much here)
+    __lock = threading.Semaphore()
+    
+    #Default id...
+    __unique_id = None
+    
+    def _set_unique_id(self):
+        '''
+        Set the unique id of this drawer object. If this has already been set, this will do nothing
+        '''
+        if self.__unique_id==None:
+            Drawer.__lock.acquire()
+            #Now get the value
+            self.__unique_id = Drawer.__unique_static_id
+            Drawer.__unique_static_id+=1
+            Drawer.__lock.release()
+    
+    def _get_unique_id(self):
+        '''
+        Return the unique id. This returns None if not set already.
+        '''
+        return self.__unique_id
+        
+        
+        
 
 class _DummyPictureHandler(screen._PictureHandler):
     '''
@@ -108,10 +142,6 @@ class PictureHandler(object):
     __picture = None
     #A lock for the picture while it is being modified.
     __picture_lock = threading.Semaphore()
-    
-    #This is a unique identifier associated to each drawer, it ensures that items
-    #will be drawn in a consistent order.
-    __unique_id = 0L
     
     #The number of width divisions along the screen
     __WIDTH_DIVISION = 32;
@@ -300,13 +330,13 @@ class PictureHandler(object):
         collided_list = []
         collided_set = set()
         #TODO REMOVE print("Got collided rectangles " + str(collided_rectangles))
-        for (_,_,_,_,(depth,unique_id,drawer)) in collided_rectangles:
-            collided_set.add(((depth,unique_id),drawer))
+        for (_,_,_,_,(depth,drawer)) in collided_rectangles:
+            collided_set.add(((depth,drawer._get_unique_id()),drawer))
         #Convert to a list
         for elem in collided_set:
             collided_list.append(elem)
         #Sort by the first element only
-        collided_list.sort(key=lambda tup: tup[0])
+        collided_list.sort(key=lambda tup: tup[0],reverse=True)
         #Now we call the redraw methods appropriately...
         for (_,drawer) in collided_list:
             #Redraw!
@@ -362,10 +392,10 @@ class PictureHandler(object):
             #Already deregistered
             return
         #Remove them from the tree...
-        for rect in rects:
-            PictureHandler.__picture_rectangle_tree.remove_rectangle(rect)
+        for (x_min,y_min,x_max,y_max,key) in rects:
+            PictureHandler.__picture_rectangle_tree.remove_rectangle((x_min,y_min,x_max,y_max,key))
             #Update the screen...
-            PictureHandler.__add_to_screen(rect)
+            PictureHandler.__add_to_screen((x_min,y_min,x_max,y_max))
         #Now remove the key value...
         PictureHandler.__drawer_to_rectangles_map[drawer] = None
     
@@ -385,16 +415,16 @@ class PictureHandler(object):
         depth value will appear behind objects with a smaller depth value. Negative values
         are allowed, and the background colour will always be drawn behind all objects.
         '''
+        #Set the drawer's unique id
+        drawer._set_unique_id()
+        #Now synchronise...
         PictureHandler.__picture_lock.acquire()
         #Firstly, check the map to see if we need to deregister first...
         if PictureHandler.__drawer_to_rectangles_map[drawer]!=None:
             #Unregister first!
             #TODO REMOVE print("Deregistering!")
             PictureHandler.__deregister_rectangles(drawer)
-        #Update the unique identifier...
-        unique_id = PictureHandler.__unique_id
-        PictureHandler.__unique_id+=1 #renew
-        #Add the key (the depth + unique_id + drawer) to the rectangles...
+        #Add the key (the depth + drawer) to the rectangles...
         conv_rects = []
         for (x_min,y_min,width,height) in rectangles:
             x_max = x_min+width
@@ -406,7 +436,7 @@ class PictureHandler(object):
             The rectangle passed in is not stored.
             '''
             PictureHandler.__add_to_screen((x_min,y_min,x_max,y_max))
-            conv_rects.append((x_min,y_min,x_max,y_max,(depth,unique_id,drawer)))
+            conv_rects.append((x_min,y_min,x_max,y_max,(depth,drawer)))
         PictureHandler.__drawer_to_rectangles_map[drawer] = conv_rects
         #Push the rectangles into the picture tree
         for rect in conv_rects:

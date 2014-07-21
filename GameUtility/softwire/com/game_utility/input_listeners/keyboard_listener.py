@@ -9,7 +9,8 @@ import softwire.com.game_utility.graphics.screen as screen, pygame.locals
 class KeyboardListener(object):
     '''
     The keyboard listener will receive all key up and key down events that it registers for.
-    There are many keys, so you are asked to register for specific keys via a list
+    There are many keys, so you are asked to register for specific keys via a list.
+    Any subclass should call the super constructor!
     '''
 
     def __init__(self, keys):
