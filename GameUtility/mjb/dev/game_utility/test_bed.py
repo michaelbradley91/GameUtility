@@ -57,7 +57,11 @@ class Dadskeys(key_listeners.KeyboardListener, frame_listeners.FrameListener,mou
             
     def button_down(self,button):
         if mouse_button_listeners.LEFT_BUTTON==button:
-            self.my_rectangle.move_rectangle(x_move=-2,y_move=2)
+            self.my_rectangle.set_visible(False)
+        if mouse_button_listeners.RIGHT_BUTTON==button:
+            self.my_rectangle.set_visible(True)
+            (r,g,b) = self.my_rectangle.get_colour()
+            self.my_rectangle.set_colour((r-20,g,b))
 
 def run():
     QuitKeyboardListener([pygame.locals.K_ESCAPE])
