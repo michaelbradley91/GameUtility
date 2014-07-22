@@ -3,18 +3,18 @@ Created on 4 Jul 2014
 
 @author: michael
 '''
-import softwire.com.game_utility.graphics.screen as screen
-import softwire.com.game_utility.input_listeners.keyboard_listener as key_listeners
-import softwire.com.game_utility.input_listeners.mouse_button_listener as mouse_button_listeners
-import softwire.com.game_utility.input_listeners.mouse_motion_listener as mouse_motion_listeners
-import softwire.com.game_utility.graphics.picture_handling.picture_handler as picture_handler
+import mjb.dev.game_utility.graphics.screen as screen
+import mjb.dev.game_utility.input_listeners.keyboard_listener as key_listeners
+import mjb.dev.game_utility.input_listeners.mouse_button_listener as mouse_button_listeners
+import mjb.dev.game_utility.input_listeners.mouse_motion_listener as mouse_motion_listeners
+import mjb.dev.game_utility.graphics.picture_handling.picture_handler as picture_handler
 import pygame.locals
-import softwire.com.game_utility.graphics.picture_handling.rectangle_tree as rect_tree
-import softwire.com.game_utility.graphics.picture_handling.rectangle_filler as rect_filler
-import softwire.com.game_utility.graphics.drawers.rectangle_drawer as rectangle_drawer
-import softwire.com.game_utility.input_listeners.frame_listener as frame_listeners
+import mjb.dev.game_utility.graphics.picture_handling.rectangle_tree as rect_tree
+import mjb.dev.game_utility.graphics.picture_handling.rectangle_filler as rect_filler
+import mjb.dev.game_utility.graphics.drawers.rectangle_drawer as rectangle_drawer
+import mjb.dev.game_utility.input_listeners.frame_listener as frame_listeners
 import time
-import softwire.com.game_utility.test_bed as test_bed
+import mjb.dev.game_utility.test_bed as test_bed
 '''
 class DummyKeyListener(key_listeners.KeyboardListener,frame_listeners.FrameListener):
     

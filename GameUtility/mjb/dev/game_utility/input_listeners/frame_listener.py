@@ -4,7 +4,7 @@ Created on 21 Jul 2014
 @author: michael
 '''
 
-import softwire.com.game_utility.graphics.screen as screen
+import mjb.dev.game_utility.graphics.screen as screen
 
 class FrameListener(object):
     '''

@@ -4,7 +4,7 @@ Created on 16 May 2014
 @author: michael
 '''
 
-import softwire.com.game_utility.graphics.screen as screen
+import mjb.dev.game_utility.graphics.screen as screen
 import pygame
 
 def get_mouse_position():

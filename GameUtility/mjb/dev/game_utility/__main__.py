@@ -4,7 +4,7 @@ Created on 4 Jul 2014
 @author: michael
 '''
 
-import softwire.com.game_utility.execute as execute
+import mjb.dev.game_utility.execute as execute
 #To reload is the entire purpose of this file...
 reload(execute)
 

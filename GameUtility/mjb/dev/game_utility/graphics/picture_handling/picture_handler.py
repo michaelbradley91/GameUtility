@@ -46,12 +46,12 @@ TODO: currently ignoring alphas and so only permitting colour keys... not sure h
 I care...
 '''
 
-import softwire.com.game_utility.graphics.screen as screen
+import mjb.dev.game_utility.graphics.screen as screen
 import pygame
 import threading
 import collections
-import softwire.com.game_utility.graphics.picture_handling.rectangle_tree as rectangle_tree
-import softwire.com.game_utility.graphics.picture_handling.rectangle_filler as rectangle_filler
+import mjb.dev.game_utility.graphics.picture_handling.rectangle_tree as rectangle_tree
+import mjb.dev.game_utility.graphics.picture_handling.rectangle_filler as rectangle_filler
 
 class Drawer(object):
     '''
