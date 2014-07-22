@@ -4,153 +4,105 @@ Created on 12 May 2014
 @author: michael
 '''
 
-import pygame, os
+import os
+import pygame.transform
 
-class ImageDrawer(object):
+class Image(object):
     '''
-    This class represents an image which can be used by the image drawer.
-    This class manages some overheads necessary for the efficient drawing of images.
+    An image for this application. An image should be considered immutable.
+    An image supports rotation and scaling transformations. However, you should
+    use an image drawer's methods for basic transformations to preserve the quality of the
+    image*.
     
-    TODO: worry about transformations!
+    *It is better to apply the full series of transformations all at once to
+    the original image (loaded from your machine) than to apply many little transformations,
+    because each one reduces the image quality. An image drawer will handle this for you!
     
-    Note that creating an image is like loading the image. You should do this as infrequently
-    as possible. Some things to avoid are:
+    TODO: I suppose if you want to be really fancy, it would be cool
+    if we could make child and parent images, so that the transformations are applied
+    across all images in a group. Might confuse the drawer pretty badly though...
+    Will leave that until much later...
     
-    1. LOADING THE SAME IMAGE TWICE: seriously - you never need to do that...
-    2. Enabling collision detection on an image which stretches and/or rotates.
-    
-    Collision detection - especially fine collision detection against the image
-    if you are using an automated form, is exceedingly expensive. The automated
-    collision detector must map the image to a list of rectangle approximations
-    each time it is transformed. Doing this once when the image is initialised is ok,
-    and typically you'd do this before the game begins to avoid hurting the FPS.
-    However, doing it every time an image is transformed is expensive.
-    
-    Screen drawing - if high precision is given when the image is drawn, it is also strongly
-    discouraged to transform. See the initialisation method for details. The default
-    will usually be best.
-    
-    TODO: REMOVE this
-    It is possible to rotate, stretch, rotate etc and get a different result
-    compared to any form of rotation followed by stretch (or vice versa).
-    As in, the order of transformations is important...
-    
-    This could be too complex. I could restrict the user to full scale or rotations,
-    and never more than these.
-    
-    TODO: THOUGHT:
-    
-    we could use inheritance to manage the collision settings. It is a lot for one class
-    to consider transformations, rotations, screen drawing precision etc as well as collisions.
-    Probably a good idea... 
+    TODO: note to self - should be possible to flip colliding rectangles etc
+    as well to avoid a recalculation. (Not feasible for rotations or scaling
+    due to likely implementation disagreements in rounding or bugs...).
     '''
+    def __init__(self, surface):
+        '''
+        Construct a new image
+        @param surface: the surface containing the image to be blitted to the screen.
+        '''
+        self.__surface = surface
     
-    '''
-    Use this value if precision in redrawing could be useful. This is only helpful for large
-    images. See the init method of this class for details...
-    '''
-    SCREEN_DRAW_PRECISE = 8
-    '''
-    Use this value if the image is small (matches the default value atm)
-    or otherwise has few hollow regions.
-    '''
-    SCREEN_DRAW_NO_PRECISION = None
+    def scale(self, new_width, new_height):
+        '''
+        Scale the image to the given size
+        @param new_width: the width of the new scaled image
+        @param new_height: the height of the new scaled image
+        @return: a new transformed image
+        '''
+        return Image(pygame.transform.scale(self.__surface,(new_width,new_height)))
     
-    def __init__(self, image, top_left, visible=True, screen_draw_precision=None):
+    def rotate(self, degrees, is_clockwise=True):
         '''
-        @param image: the image to be drawn by this object. Note that the image
-        should be the surface returned by the image loader.
-        @param top_left: the top left coordinate where this image should appear on screen, as (x,y)
-        @param visible: default True, determines whether or not the image should appear
-        on screen.
-        @param screen_draw_precision: default None, determines when the image is redrawn*
-        
-        *This is a technical setting but not tooooo... hard to understand. As images pass over
-        each other, they have to be redrawn to ensure that images appear in the correct order
-        on screen. The screen precision determines when this should happen.
-        
-        All images are approximated by rectangles internally (not in appearance),
-        and if these rectangles are touched by another image, it will trigger this image to
-        redraw.
-        
-        Approximating an image by a single rectangle is fine for small images,
-        as the redraw method will only be called unnecessarily very rarely. This is faster
-        than using many rectangles for more precise detection.
-        
-        However, for large objects like a lamp post, very little of the lamp post will actually
-        cover its rectangle, due to the overhanging light. Hence, it would be better
-        to approximate this by two rectangles. This is faster since it will be redrawn
-        less often (even though the additional rectangle incurs a larger overhead).
-        
-        screen_draw_precision determines how the approximating rectangles are generated.
-        A value of None is cheapand usually fast - using one big rectangle.
-        A value of 1 will cover the image with pixel perfect precision, which I'd never
-        recommend as it is often very slow for "rough" edges etc (or evil circles)
-        A value of "x" will treat the image as a grid of x*x squares, with a square
-        considered occupied if any pixel in the image occupies it. These squares
-        will then be covered by rectangles kept as "large as possible" (heuristically
-        for speed) and will form the approximation for an image. Thus, large x will ignore
-        small imperfections in "straight" edges more or less, and use far less rectangles.
-        
-        Use the class constants for recommended values. Typically, x=8 is ok for special
-        cases which care about the precision, but x=None is the default since it is faster.
+        Rotate the image by the given number of degrees (sorry rads - believe this is more
+        intuitive). Clockwise is the default direction of rotation.
+        @param degrees: the number of degrees to turn this image by. (Negatives allowed)
+        @param is_clockwise: True by default, and should true iff you wish to rotate the image
+        clockwise.
+        @return: a new transformed image
         '''
-        pass
+        if is_clockwise:
+            return Image(pygame.transform.rotate(self.__surface,-1 * degrees))
+        else:
+            return Image(pygame.transform.rotate(self.__surface,degrees))
     
-    def set_current_root_image(self, image):
+    def flip(self,is_vertical=False):
         '''
-        Set the current image this object should use. Note that
-        it is advised you use a root image, since if you pass a transformed image and
-        transform again, you'll start to lose quality.
-        @param image: the image to store.
+        Flip this image either horizontally or vertically. (Flipping vertically means M becomes W)
+        Horizontal flip by default
+        @param is_vertical: should be false iff you wish to flip vertically. (False by default)
+        @return: a new image flipped along the right axis.
         '''
-        pass
+        return Image(pygame.transform.flip(self.__surface,not is_vertical,is_vertical))
+    
+    def get_size(self):
+        '''
+        @return: the size of the image (in terms of the surface it has been attached to)
+        as (width,height)
+        '''
+        return self.__surface.get_size()
+    
+    def get_colour_key(self):
+        '''
+        @return: the colour key of this surface. (You should not change this!
+        Not sure what you need it for..?)
+        '''
+        return self.__surface.get_colorkey()
         
-    def get_current_image(self):
+    def _get_surface(self):
         '''
-        @return: the image as it is being drawn now. It is generally
-        no advised to try modifying this!
+        This returns the actual surface of the image being drawn, allowing you to
+        perform fancier transformations. This is discouraged - the actions provided
+        to you in this class were chosen carefully.
+        If you do use this, you must not modify this surface instance itself. Once
+        you have the new surface, you can create a new image object like this to use elsewhere
+        in the application.
+        @return: the surface containing the image to be drawn
         '''
-        pass
+        return self.__surface
     
-    def get_current_root_image(self):
+    def _calculate_rectangle_approximation(self, precision=None):
         '''
-        @return: the image for this object. The root image
-        is the image as it was loaded from your machine - in other words before transformations
-        have been applied. To avoid losing quality, it is best to apply all transformations
-        to the root image, so it is best to pass this around if sharing...
-        '''
-        pass
-    
-    def save_current_image_data(self):
-        '''
-        Save the current image data in memory. This is useful for storing transformations
-        of the image on the fly. This is in RAM, so don't do it too often
-        (this does not write to a file or anything).
-        If a transformation of an image is stored in RAM, and that transformation
-        is needed again, it will be loaded much more quickly! (Along with
-        collision stuff probably...not implemented yet).
-        It is not worth doing if the image is never transformed.
-        
-        @return: a key representing what was saved. It is saved statically
-        so all drawers can access this saved image.
-        '''
-        pass
-    
-    @staticmethod
-    def forget_image_data(key):
-        '''
-        Forget a saved image. This is important for freeing up memory.
-        @param key: the key that was received when the image was saved. (Keep it!)
-        '''
-        pass
-    
-    @staticmethod
-    def forget_all_image_data():
-        '''
-        Forget all of the saved image data. This is quite brutal, but useful
-        if you lost your keys!
-        (It is a lot faster than iterating over all the keys though).
+        Seems like an obscure method, but it is really useful! This will calculate
+        a list of rectangles fully covering the image, with a particular precision.
+        This respects the colour key of the image only. Pixel alphas are not supported at
+        the moment.
+        TODO: support pixel alphas? Probably surface alphas at least. Imagine we could enforce
+        that.
+        @param precision: will treat the sprite as a grid of precision*precision squares
+        and then cover the (partially) occupied squares with rectangles.
+        Default None will return a single rectangle (fast). Precision of one is pixel perfect.
         '''
         pass
 
@@ -174,7 +126,7 @@ class ImageLoader(object):
         @param name: the name of the file after the image directory
         @param colourKey: the colour that should appear transparent in the image
         None by default meaning no colour will appear transparent
-        @return: the image (as an object for this application)
+        @return: the image (as in this file!)
         '''
         fullname = os.path.join(self.directory, name)
         try:
@@ -185,9 +137,9 @@ class ImageLoader(object):
         surface = surface.convert()
         if colourkey is not None:
             surface.set_colorkey(colourkey, pygame.locals.RLEACCEL)
-        return surface
+        return Image(surface)
     
-    def get_director(self):
+    def get_directory(self):
         '''
         @return: the directory that this loader is loading images from.
         '''
