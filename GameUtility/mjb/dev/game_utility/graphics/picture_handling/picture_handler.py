@@ -50,7 +50,7 @@ import mjb.dev.game_utility.graphics.screen as screen
 import pygame
 import threading
 import collections
-import mjb.dev.game_utility.graphics.utility.rectangle_tree as rectangle_tree
+import mjb.dev.game_utility.graphics.collisions.large_rectangle_tree as large_rectangle_tree
 import mjb.dev.game_utility.graphics.utility.rectangle_filler as rectangle_filler
 
 class Drawer(object):
@@ -243,12 +243,12 @@ class PictureHandler(object):
             PictureHandler.__MAX_Y_COORD_SCREEN_CONVERSION[y] = height_dividers[y+1]
         #Fill the tree
         PictureHandler.__screen_rectangles_to_add = PictureHandler.__SCREEN_RECTANGLES
-        PictureHandler.__screen_rectangle_tree = rectangle_tree.RectangleTree(PictureHandler.__size)
+        PictureHandler.__screen_rectangle_tree = large_rectangle_tree.LargeRectangleTree(PictureHandler.__size)
         #Fill it
         PictureHandler.__fill_screen_tree()
         PictureHandler.__screen_rectangles_to_add = [] #don't update on this...
         #Finally set up the picture rectangle tree...
-        PictureHandler.__picture_rectangle_tree = rectangle_tree.RectangleTree(PictureHandler.__size)
+        PictureHandler.__picture_rectangle_tree = large_rectangle_tree.LargeRectangleTree(PictureHandler.__size)
         
     @staticmethod
     def __fill_screen_tree():
@@ -265,9 +265,6 @@ class PictureHandler(object):
         Add a given rectangle to the screen
         @param rect: the rectangle to add in the form of (x_min, y_min, x_max, y_max)
         '''
-        (x_min,y_min,x_max,y_max) = rect
-        #Add a dummy key
-        rect = (x_min,y_min,x_max,y_max,None)
         #Add the rectangle to the screen rectangle tree by colliding it first
         #TODO REMOVE print("Adding rectangle " + str(rect))
         collided_rects = PictureHandler.__screen_rectangle_tree.collide_rectangle(rect)
@@ -325,7 +322,7 @@ class PictureHandler(object):
         '''
         (x_min,y_min,x_max,y_max) = rect
         #Now work out everyone who needs to redraw...
-        collided_rectangles = PictureHandler.__picture_rectangle_tree.collide_rectangle((x_min,y_min,x_max,y_max,None))
+        collided_rectangles = PictureHandler.__picture_rectangle_tree.collide_rectangle((x_min,y_min,x_max,y_max))
         #Gather them up, and order them by depth
         collided_list = []
         collided_set = set()
