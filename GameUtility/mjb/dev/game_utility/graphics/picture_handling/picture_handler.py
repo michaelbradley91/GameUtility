@@ -50,8 +50,8 @@ import mjb.dev.game_utility.graphics.screen as screen
 import pygame
 import threading
 import collections
-import mjb.dev.game_utility.graphics.picture_handling.rectangle_tree as rectangle_tree
-import mjb.dev.game_utility.graphics.picture_handling.rectangle_filler as rectangle_filler
+import mjb.dev.game_utility.graphics.utility.rectangle_tree as rectangle_tree
+import mjb.dev.game_utility.graphics.utility.rectangle_filler as rectangle_filler
 
 class Drawer(object):
     '''

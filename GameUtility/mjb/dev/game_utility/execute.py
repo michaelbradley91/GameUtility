@@ -9,12 +9,13 @@ import mjb.dev.game_utility.input_listeners.mouse_button_listener as mouse_butto
 import mjb.dev.game_utility.input_listeners.mouse_motion_listener as mouse_motion_listeners
 import mjb.dev.game_utility.graphics.picture_handling.picture_handler as picture_handler
 import pygame.locals
-import mjb.dev.game_utility.graphics.picture_handling.rectangle_tree as rect_tree
-import mjb.dev.game_utility.graphics.picture_handling.rectangle_filler as rect_filler
+import mjb.dev.game_utility.graphics.utility.rectangle_tree as rect_tree
+import mjb.dev.game_utility.graphics.utility.rectangle_filler as rect_filler
 import mjb.dev.game_utility.graphics.drawers.rectangle_drawer as rectangle_drawer
 import mjb.dev.game_utility.input_listeners.frame_listener as frame_listeners
 import time
 import mjb.dev.game_utility.test_bed as test_bed
+import mjb.dev.game_utility.graphics.image as image
 '''
 class DummyKeyListener(key_listeners.KeyboardListener,frame_listeners.FrameListener):
     
@@ -160,5 +161,21 @@ def run():
     #DummyMouseMotionListener()
     #Start the game loop!
     #screen.Screen.start_game_loop()
-    test_bed.run()
+    #Test it out...
+    my_surface = pygame.Surface((6,6))
+    invisible = (255,0,0)
+    my_surface.set_colorkey(invisible,pygame.locals.RLEACCEL)
+    print("Got color key " + str(my_surface.get_colorkey()))
+    print("Got pixel at " + str(my_surface.get_at((3,3))))
+    my_surface.fill((128,128,128))
+    print("Got pixel at " + str(my_surface.get_at((3,3))))
+    
+    #Blank out part of the surface...
+    my_surface.fill(invisible,(3,0,6,6))
+    print("Got pixel at " + str(my_surface.get_at((3,3))))
+    print("Is colour key? " + str(my_surface.get_at((3,3))==my_surface.get_colorkey()))
+    my_image = image.Image(my_surface)
+    precision = 1
+    print("Covering rect " + str(my_image._calculate_rectangle_approximation(precision)))
+    #test_bed.run()
     

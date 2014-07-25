@@ -6,6 +6,7 @@ Created on 12 May 2014
 
 import os
 import pygame.transform
+import mjb.dev.game_utility.graphics.utility.rectangle_filler as rectangle_filler
 
 class Image(object):
     '''
@@ -75,10 +76,11 @@ class Image(object):
     
     def get_colour_key(self):
         '''
-        @return: the colour key of this surface. (You should not change this!
+        @return: the colour key of this surface as (r,g,b). (You should not change this!
         Not sure what you need it for..?)
         '''
-        return self.__surface.get_colorkey()
+        (r,g,b,_) = self.__surface.get_colorkey()
+        return (r,g,b)
         
     def _get_surface(self):
         '''
@@ -98,13 +100,76 @@ class Image(object):
         a list of rectangles fully covering the image, with a particular precision.
         This respects the colour key of the image only. Pixel alphas are not supported at
         the moment.
+        
+        Note: if the entity is entirely transparent, there is a "feature". Any non-trivial
+        precision will return no rectangles at all, but the default simple one
+        will return the entire object... I don't know why you would have an image that is
+        genuinely invisible (especially since drawers have visibility settings) but that's
+        what would happen. Accounting for this case is expensive so I've ignored it.
+        
         TODO: support pixel alphas? Probably surface alphas at least. Imagine we could enforce
         that.
         @param precision: will treat the sprite as a grid of precision*precision squares
         and then cover the (partially) occupied squares with rectangles.
         Default None will return a single rectangle (fast). Precision of one is pixel perfect.
+        
+        @return: the list of covering rectangles in the form of (x_min,y_min,x_max,y_max)
         '''
-        pass
+        if precision!=None and precision<1:
+            raise ValueError("The precision for an image cannot be negative. Received value " + str(precision))
+        (width,height) = self.__surface.get_size()
+        #OK! First take care of the special case..
+        if precision==None:
+            return (0,0,width,height)
+        colour_key = self.get_colour_key()
+        #For the non-trivial precision, calculate which rectangles
+        #are occupied and which are not...
+        occupied_coords = []
+        for x in range(0,((width-1)/precision)+1):
+            for y in range(0,((height-1)/precision)+1):
+                #Note that the screen pixels are from 0 to width-1 and 0 to height-1
+                #Decide if this is an occupied square...
+                is_empty = True
+                x_mod = 0
+                y_mod = 0
+                while is_empty and y_mod<precision:
+                    #Figure out the pixel coordinates...
+                    x_pixel = (x * precision) + x_mod
+                    y_pixel = (y * precision) + y_mod
+                    if (x_pixel>=width):
+                        #Skip...
+                        x_mod = 0
+                        y_mod+=1
+                        continue
+                    if (y_pixel>=height):
+                        break #quit the loop
+                    #The pixel fits in the surface
+                    (r,g,b,_) = self.__surface.get_at((x_pixel,y_pixel))
+                    if (r,g,b)!=colour_key:
+                        #It is not empty!
+                        is_empty = False
+                    #Update the coordinates
+                    if x_mod==precision-1:
+                        y_mod+=1
+                        x_mod=0
+                    else:
+                        x_mod+=1
+                #See if it is empty
+                if not is_empty:
+                    #Add to the coordinates...
+                    occupied_coords.append((x,y))
+        #Now fill the rectangle...
+        rects = rectangle_filler.RectangleFiller.fill_grid(occupied_coords)
+        print("Got occupied coords " + str(occupied_coords))
+        print("Got fill " + str(rects))
+        #Convert the rectangles back...
+        converted_coords = []
+        for (x_min,y_min,x_max,y_max) in rects:
+            converted_coords.append((x_min * precision,
+                                     y_min * precision,
+                                     min((x_max+1) * precision,width),
+                                     min((y_max+1) * precision,height)))
+        return converted_coords
 
 class ImageLoader(object):
     '''
