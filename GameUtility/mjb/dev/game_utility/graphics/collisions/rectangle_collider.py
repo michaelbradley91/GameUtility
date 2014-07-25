@@ -4,15 +4,9 @@ Created on 25 Jul 2014
 @author: michael
 '''
 
-from mjb.dev.game_utility.graphics.collisions.large_rectangle_tree import LargeRectangleTree
-from mjb.dev.game_utility.graphics.collisions.small_rectangle_tree import SmallRectangleTree
-from mjb.dev.game_utility.graphics.collisions.simple_rectangle_collider import SimpleRectangleCollider
-
 class RectangleCollider(object):
     '''
-    This class contains the static methods for determining the type of collider
-    most suitable for a situation.
-    This class is also the interface for any rectangle collider.
+    This class is the interface for any rectangle collider.
     '''
     
     #
@@ -71,39 +65,4 @@ class RectangleCollider(object):
         '''
         pass
     
-    #The boundaries for deciding which collider is best...
-    SMALL = 10
-    '''
-    If the expected number of rectangles is <=SMALL, the simple rectangle collider will be used
-    '''
-    MEDIUM = 100
-    '''
-    If the expected number of rectangles is >SMALL and <=MEDIUM, the small rectangle tree will be used
-    (Otherwise the large tree will be used)
-    '''
     
-    @staticmethod
-    def get_recommended_collider(self,size,number_of_rectangles):
-        '''
-        Return the collider most suitable to handle the given size of screen
-        and the (estimated) number of rectangles to be added
-        @param size: the size of the screen for the collider to work with
-        @param number_of_rectangles: the estimated number of rectangles to be added to this screen
-        '''
-        #Check the size...
-        (width,height) = size
-        if (number_of_rectangles<=RectangleCollider.SMALL):
-            #The small collider will do
-            return SimpleRectangleCollider(size)
-        if (number_of_rectangles>RectangleCollider.SMALL
-            and number_of_rectangles<=RectangleCollider.MEDIUM):
-            #The small tree is appropriate
-            if (SmallRectangleTree.MIN_WIDTH<=width or SmallRectangleTree.MIN_HEIGHT<=height):
-                return SmallRectangleTree(size)
-            return SimpleRectangleCollider(size)
-        #The large tree is needed!
-        if (LargeRectangleTree.MIN_WIDTH<=width or LargeRectangleTree.MIN_HEIGHT<=height):
-            return LargeRectangleTree(size)
-        if (SmallRectangleTree.MIN_WIDTH<=width or SmallRectangleTree.MIN_HEIGHT<=height):
-            return SmallRectangleTree(size)
-        return SimpleRectangleCollider(size)

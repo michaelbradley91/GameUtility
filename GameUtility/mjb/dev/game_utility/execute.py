@@ -9,7 +9,7 @@ import mjb.dev.game_utility.input_listeners.mouse_button_listener as mouse_butto
 import mjb.dev.game_utility.input_listeners.mouse_motion_listener as mouse_motion_listeners
 import mjb.dev.game_utility.graphics.picture_handling.picture_handler as picture_handler
 import pygame.locals
-import mjb.dev.game_utility.graphics.utility.rectangle_tree as rect_tree
+import mjb.dev.game_utility.graphics.collisions.large_rectangle_tree as rect_tree
 import mjb.dev.game_utility.graphics.utility.rectangle_filler as rect_filler
 import mjb.dev.game_utility.graphics.drawers.rectangle_drawer as rectangle_drawer
 import mjb.dev.game_utility.input_listeners.frame_listener as frame_listeners
