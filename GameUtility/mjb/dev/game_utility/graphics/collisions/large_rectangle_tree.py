@@ -23,6 +23,8 @@ class LargeRectangleTree(collider.RectangleCollider):
     
     You should usually use the small rectangle tree to avoid both memory and time
     overheads.
+    
+    TODO: discovered lists are arrays... should really remove the default dicts now.
     '''
     
     '''

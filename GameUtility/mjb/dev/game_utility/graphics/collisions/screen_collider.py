@@ -1,0 +1,147 @@
+'''
+Created on 27 Jul 2014
+
+@author: michael
+'''
+
+from mjb.dev.game_utility.graphics.collisions.large_rectangle_tree import LargeRectangleTree
+
+class ScreenCollider(object):
+    '''
+    The screen collider is designed to provide "screen" sized (it is still a parameter)
+    collision detection automatically. It expects recursive collisions to be applied,
+    which means that a single rectangle is attached to the screen collider first,
+    and then inside this rectangle is a list of further rectangles. This enables faster
+    addition and deletion.
+    '''
+    
+    '''
+    The minimum width of the screen that this tree supports
+    '''
+    MIN_WIDTH = 16
+    '''
+    The minimum height of the screen that this tree supports
+    '''
+    MIN_HEIGHT = 16
+    
+    def __init__(self,size, get_inner_rectangles, get_inner_collider):
+        '''
+        Create a new screen collider for the given screen size! Note that the screen
+        collider always uses a large rectangle tree for its "outer" rectangles
+        @param size: the size of the screen to collide against as (width,height)
+        @param get_inner_rectangles: return a list of all the inner rectangles as a list of (x_min,y_min,x_max,y_max). Should return [] if there are none, and accept a rectangle with the key as a parameter
+        @param get_inner_collider: return the collider containing the inner rectangles. Should accept an outer rectangle with the key.
+        @raise ValueError: if the width and height are not at least 16 pixels
+        '''
+        #Remember the values
+        self.__get_inner_rectangles = get_inner_rectangles
+        self.__get_inner_collider = get_inner_collider
+        self.__rectangle_tree = LargeRectangleTree(size)
+        
+    def insert_outer_rectangle(self, rect):
+        '''
+        Insert a rectangle into the collider.
+        @param rect: the rectangle to insert, which should have the form (x_min,y_min,x_max,y_max,key)
+        where key is any custom value
+        '''
+        self.__rectangle_tree.insert_rectangle(rect)
+    
+    def remove_outer_rectangle(self, rect):
+        '''
+        Remove a rectangle from the collider. Note that the key must also be equal
+        to the key of the rectangle you wish to remove.
+        @param rect: the rectangle to insert, which should have the form (x_min,y_min,x_max,y_max,key)
+        where key is any custom value
+        @return: true iff the rectangle was removed, since it was in the tree
+        '''
+        return self.__rectangle_tree.remove_rectangle(rect)
+    
+    def collide_outer_rectangle(self, outer_rectangle, inner_rectangles, inner_collider):
+        '''
+        Collide a rectangle tree with the collider
+        @param outer_rectangle: the rectangle to collide against in the form of (x_min,y_min,x_max,y_max)
+        @param inner_rectangles: the inner rectangles associated to the outer rectangle as a list of (x_min,y_min,x_max,y_max)
+        @param inner_collider: the inner collider associated to the inner rectangle
+        @return: a list of all rectangles that collided with the given rectangle.
+        '''
+        outer_rectangles = self.__rectangle_tree.collide_rectangle(outer_rectangle)
+        #We now check whether or not each outer rectangle collided against really was colliding.
+        first_has_inner_rects = inner_rectangles!=[]
+        res = []
+        for second_outer_rectangle in outer_rectangles:
+            second_inner_rects = self.__get_inner_rectangles(second_outer_rectangle)
+            second_has_inner_rects = second_inner_rects!=[]
+            second_inner_collider = self.__get_inner_collider(second_outer_rectangle)
+            if not (first_has_inner_rects or second_has_inner_rects):
+                res.append(second_outer_rectangle)
+                continue
+            #Loop over the small list
+            if len(inner_rectangles)>len(second_inner_rects):
+                if not second_has_inner_rects:
+                    (x_min,y_min,x_max,y_max,_) = second_outer_rectangle
+                    if inner_collider.is_colliding((x_min,y_min,x_max,y_max)):
+                        res.append(second_outer_rectangle)
+                    continue
+                for rect in second_inner_rects:
+                    if inner_collider.is_colliding(rect):
+                        res.append(second_outer_rectangle)
+                        break
+                continue
+            else:
+                if not first_has_inner_rects:
+                    if second_inner_collider.is_colliding(outer_rectangle):
+                        res.append(second_outer_rectangle)
+                    continue
+                for rect in inner_rectangles:
+                    if second_inner_collider.is_colliding(rect):
+                        res.append(second_outer_rectangle)
+                        break
+                continue
+        #Done! Res has all of the rectangles that are definitely colliding
+        return res
+    
+    def is_colliding(self, outer_rectangle, inner_rectangles, inner_collider):
+        '''
+        Collide a rectangle tree with the collider
+        @param outer_rectangle: the rectangle to collide against in the form of (x_min,y_min,x_max,y_max)
+        @param inner_rectangles: the inner rectangles associated to the outer rectangle as a list of (x_min,y_min,x_max,y_max)
+        @param inner_collider: the inner collider associated to the inner rectangle
+        @return: true iff the outer rectangle is colliding with something in the collider
+        '''
+        outer_rectangles = self.__rectangle_tree.collide_rectangle(outer_rectangle)
+        #We now check whether or not each outer rectangle collided against really was colliding.
+        first_has_inner_rects = inner_rectangles!=[]
+        for second_outer_rectangle in outer_rectangles:
+            second_inner_rects = self.__get_inner_rectangles(second_outer_rectangle)
+            second_has_inner_rects = second_inner_rects!=[]
+            second_inner_collider = self.__get_inner_collider(second_outer_rectangle)
+            if not (first_has_inner_rects or second_has_inner_rects):
+                return True
+            #Loop over the small list
+            if len(inner_rectangles)>len(second_inner_rects):
+                if not second_has_inner_rects:
+                    (x_min,y_min,x_max,y_max,_) = second_outer_rectangle
+                    if inner_collider.is_colliding((x_min,y_min,x_max,y_max)):
+                        return True
+                    continue
+                for rect in second_inner_rects:
+                    if inner_collider.is_colliding(rect):
+                        return True
+                continue
+            else:
+                if not first_has_inner_rects:
+                    if second_inner_collider.is_colliding(outer_rectangle):
+                        return True
+                    continue
+                for rect in inner_rectangles:
+                    if second_inner_collider.is_colliding(rect):
+                        return True
+                continue
+        #Done! Res has all of the rectangles that are definitely colliding
+        return False
+            
+    def clear(self):
+        '''
+        Remove all rectangles from the collider
+        '''
+        self.__rectangle_tree.clear()
