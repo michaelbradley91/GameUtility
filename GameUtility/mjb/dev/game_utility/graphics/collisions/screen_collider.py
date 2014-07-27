@@ -4,8 +4,6 @@ Created on 27 Jul 2014
 @author: michael
 '''
 
-from mjb.dev.game_utility.graphics.collisions.large_rectangle_tree import LargeRectangleTree
-
 class ScreenCollider(object):
     '''
     The screen collider is designed to provide "screen" sized (it is still a parameter)
@@ -24,11 +22,10 @@ class ScreenCollider(object):
     '''
     MIN_HEIGHT = 16
     
-    def __init__(self,size, get_inner_rectangles, get_inner_collider):
+    def __init__(self,rectangle_collider,get_inner_rectangles, get_inner_collider):
         '''
-        Create a new screen collider for the given screen size! Note that the screen
-        collider always uses a large rectangle tree for its "outer" rectangles
-        @param size: the size of the screen to collide against as (width,height)
+        Create a new screen collider!
+        @param rectangle_collider: the rectangle collider to be used for the outer rectangles
         @param get_inner_rectangles: return a list of all the inner rectangles as a list of (x_min,y_min,x_max,y_max). Should return [] if there are none, and accept a rectangle with the key as a parameter
         @param get_inner_collider: return the collider containing the inner rectangles. Should accept an outer rectangle with the key.
         @raise ValueError: if the width and height are not at least 16 pixels
@@ -36,7 +33,7 @@ class ScreenCollider(object):
         #Remember the values
         self.__get_inner_rectangles = get_inner_rectangles
         self.__get_inner_collider = get_inner_collider
-        self.__rectangle_tree = LargeRectangleTree(size)
+        self.__rectangle_collider = rectangle_collider
         
     def insert_outer_rectangle(self, rect):
         '''
@@ -44,7 +41,7 @@ class ScreenCollider(object):
         @param rect: the rectangle to insert, which should have the form (x_min,y_min,x_max,y_max,key)
         where key is any custom value
         '''
-        self.__rectangle_tree.insert_rectangle(rect)
+        self.__rectangle_collider.insert_rectangle(rect)
     
     def remove_outer_rectangle(self, rect):
         '''
@@ -54,9 +51,9 @@ class ScreenCollider(object):
         where key is any custom value
         @return: true iff the rectangle was removed, since it was in the tree
         '''
-        return self.__rectangle_tree.remove_rectangle(rect)
+        return self.__rectangle_collider.remove_rectangle(rect)
     
-    def collide_outer_rectangle(self, outer_rectangle, inner_rectangles, inner_collider):
+    def collide_outer_rectangle(self, outer_rectangle, inner_rectangles=[], inner_collider=None):
         '''
         Collide a rectangle tree with the collider
         @param outer_rectangle: the rectangle to collide against in the form of (x_min,y_min,x_max,y_max)
@@ -64,7 +61,7 @@ class ScreenCollider(object):
         @param inner_collider: the inner collider associated to the inner rectangle
         @return: a list of all rectangles that collided with the given rectangle.
         '''
-        outer_rectangles = self.__rectangle_tree.collide_rectangle(outer_rectangle)
+        outer_rectangles = self.__rectangle_collider.collide_rectangle(outer_rectangle)
         #We now check whether or not each outer rectangle collided against really was colliding.
         first_has_inner_rects = inner_rectangles!=[]
         res = []
@@ -100,7 +97,7 @@ class ScreenCollider(object):
         #Done! Res has all of the rectangles that are definitely colliding
         return res
     
-    def is_colliding(self, outer_rectangle, inner_rectangles, inner_collider):
+    def is_colliding(self, outer_rectangle, inner_rectangles=[], inner_collider=None):
         '''
         Collide a rectangle tree with the collider
         @param outer_rectangle: the rectangle to collide against in the form of (x_min,y_min,x_max,y_max)
@@ -108,7 +105,7 @@ class ScreenCollider(object):
         @param inner_collider: the inner collider associated to the inner rectangle
         @return: true iff the outer rectangle is colliding with something in the collider
         '''
-        outer_rectangles = self.__rectangle_tree.collide_rectangle(outer_rectangle)
+        outer_rectangles = self.__rectangle_collider.collide_rectangle(outer_rectangle)
         #We now check whether or not each outer rectangle collided against really was colliding.
         first_has_inner_rects = inner_rectangles!=[]
         for second_outer_rectangle in outer_rectangles:
@@ -144,4 +141,4 @@ class ScreenCollider(object):
         '''
         Remove all rectangles from the collider
         '''
-        self.__rectangle_tree.clear()
+        self.__rectangle_collider.clear()

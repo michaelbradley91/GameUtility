@@ -46,12 +46,14 @@ TODO: currently ignoring alphas and so only permitting colour keys... not sure h
 I care...
 '''
 
-import mjb.dev.game_utility.graphics.screen as screen
+from mjb.dev.game_utility.graphics.screen import _PictureHandler, Screen
 import pygame
 import threading
 import collections
-import mjb.dev.game_utility.graphics.collisions.large_rectangle_tree as large_rectangle_tree
-import mjb.dev.game_utility.graphics.utility.rectangle_filler as rectangle_filler
+from mjb.dev.game_utility.graphics.collisions.large_rectangle_tree import LargeRectangleTree
+from mjb.dev.game_utility.graphics.collisions.small_rectangle_tree import SmallRectangleTree
+from mjb.dev.game_utility.graphics.utility.rectangle_filler import RectangleFiller
+from mjb.dev.game_utility.graphics.collisions.screen_collider import ScreenCollider
 
 class Drawer(object):
     '''
@@ -79,6 +81,29 @@ class Drawer(object):
         @param surface: the surface to drawn on. Other than drawing itself, the surface should
         not be tampered with. Get the clip area to see the rectangle in which the drawing is
         actually occurring if you can exploit that for efficiency.
+        '''
+        pass
+    
+    def get_bounding_rectangle(self):
+        '''
+        @return: a rectangle in the form of (x_min,y_min,x_max,y_max) covering the whole
+        area that the drawer might draw in.
+        '''
+        pass
+    
+    def get_inner_rectangles(self):
+        '''
+        @return: the inner rectangles more accurately representing the space occupied by
+        the drawer. This is intended to remain static (change the drawer if the image
+        changes). The rectangles should be of the form (x_min,y_min,x_max,y_max).
+        Use an empty list if the bounding rectangle is accurate enough.
+        '''
+        pass
+    
+    def get_inner_collider(self):
+        '''
+        @return: a rectangle collider containing all of the inner rectangles.
+        Leave this as None if no such rectangle is required.
         '''
         pass
     
@@ -111,7 +136,7 @@ class Drawer(object):
         
         
 
-class _DummyPictureHandler(screen._PictureHandler):
+class _DummyPictureHandler(_PictureHandler):
     '''
     This handler just passes the calls to the static class
     '''
@@ -178,14 +203,14 @@ class PictureHandler(object):
         if PictureHandler.__initialised:
             raise ValueError("Cannot initialise the picture handler more than once")
         #Remember some stats about the screen
-        PictureHandler.__background_colour = screen.Screen.get_background_colour()
-        PictureHandler.__size = screen.Screen.get_screen_size()
+        PictureHandler.__background_colour = Screen.get_background_colour()
+        PictureHandler.__size = Screen.get_screen_size()
         #Initialise the picture
         PictureHandler.__picture = pygame.Surface(PictureHandler.__size)
         PictureHandler.__picture = PictureHandler.__picture.convert()
         PictureHandler.__picture.fill(PictureHandler.__background_colour)
         #Assign self as the picture handler
-        screen.Screen.set_picture_handler(PictureHandler.__handler)
+        Screen.set_picture_handler(PictureHandler.__handler)
         #Initialise the grid mechanism
         PictureHandler.__initialise_grid()
         #Setup the rectangle to drawer map
@@ -243,12 +268,24 @@ class PictureHandler(object):
             PictureHandler.__MAX_Y_COORD_SCREEN_CONVERSION[y] = height_dividers[y+1]
         #Fill the tree
         PictureHandler.__screen_rectangles_to_add = PictureHandler.__SCREEN_RECTANGLES
-        PictureHandler.__screen_rectangle_tree = large_rectangle_tree.LargeRectangleTree(PictureHandler.__size)
+        PictureHandler.__screen_rectangle_tree = ScreenCollider(
+            #Use a small rectangle tree for the screen itself
+            SmallRectangleTree(PictureHandler.__size),
+            #These rectangles are plain old big rectangles.
+            lambda _: [],
+            lambda _: None
+            )
         #Fill it
         PictureHandler.__fill_screen_tree()
         PictureHandler.__screen_rectangles_to_add = [] #don't update on this...
         #Finally set up the picture rectangle tree...
-        PictureHandler.__picture_rectangle_tree = large_rectangle_tree.LargeRectangleTree(PictureHandler.__size)
+        PictureHandler.__picture_rectangle_tree = ScreenCollider(
+            #Use a large rectangle tree to hold the picture
+            LargeRectangleTree(PictureHandler.__size),
+            #Extract the inner rectangles from the drawer
+            lambda (_,_,_,_,(_,drawer)): drawer.get_inner_rectangles(),
+            lambda (_,_,_,_,(_,drawer)): drawer.get_inner_collider()
+            )
         
     @staticmethod
     def __fill_screen_tree():
@@ -299,7 +336,7 @@ class PictureHandler(object):
         #TODO REMOVE print("Filling coords " + str(coords))
         PictureHandler.__screen_rectangles_to_add = []
         #Calculate the covering rectangles...
-        covering_rects = rectangle_filler.RectangleFiller.fill_grid(coords)
+        covering_rects = RectangleFiller.fill_grid(coords)
         #TODO REMOVE print("Got covering rectangles " + str(covering_rects))
         #Recalculate from these rectangles the screen rectangles to update against...
         screen_rects = []
@@ -397,7 +434,7 @@ class PictureHandler(object):
         PictureHandler.__drawer_to_rectangles_map[drawer] = None
     
     @staticmethod
-    def register_rectangles(drawer, rectangles, depth):
+    def register_drawer(drawer, depth):
         '''
         Register a drawer object as wishing to draw on the screen. The rectangles
         should always cover the entire area that you might wish to draw on.
@@ -407,7 +444,6 @@ class PictureHandler(object):
         Rectangles should be of the form (x_min,y_min,width,height)
         Note that an attempt to register twice will remove the previous registration!!!
         @param drawer: the drawer to register with the rectangles.
-        @param rectangles: a list of rectangles covering the area the drawer might draw in.
         @param depth: the depth of this object in the picture. Objects with a greater
         depth value will appear behind objects with a smaller depth value. Negative values
         are allowed, and the background colour will always be drawn behind all objects.
@@ -422,27 +458,16 @@ class PictureHandler(object):
             #TODO REMOVE print("Deregistering!")
             PictureHandler.__deregister_rectangles(drawer)
         #Add the key (the depth + drawer) to the rectangles...
-        conv_rects = []
-        for (x_min,y_min,width,height) in rectangles:
-            x_max = x_min+width
-            y_max = y_min+height
-            #Add to the screen for the updates
-            '''
-            Note: this method doesn't need the key since it is
-            calculating the screen update rectangles. These are separate rectangles.
-            The rectangle passed in is not stored.
-            '''
-            PictureHandler.__add_to_screen((x_min,y_min,x_max,y_max))
-            conv_rects.append((x_min,y_min,x_max,y_max,(depth,drawer)))
-        PictureHandler.__drawer_to_rectangles_map[drawer] = conv_rects
-        #Push the rectangles into the picture tree
-        for rect in conv_rects:
-            '''
-            The picture_rectangle_tree is used when the screen update rectangles
-            have been calculated. These are collided with the rectangles in the picture
-            rectangle tree to decide who needs to be redrawn.
-            '''
-            PictureHandler.__picture_rectangle_tree.insert_rectangle(rect)
+        (x_min,y_min,x_max,y_max) = drawer.get_bounding_rectangle()
+        #Add to the screen for the updates
+        '''
+        Note: this method doesn't need the key since it is
+        calculating the screen update rectangles. These are separate rectangles.
+        The rectangle passed in is not stored.
+        '''
+        PictureHandler.__add_to_screen((x_min,y_min,x_max,y_max))
+        #Add to the picture handler's screen
+        PictureHandler.__picture_rectangle_tree.insert_rectangle((x_min,y_min,x_max,y_max,(depth,drawer)))
         #That should be everything..?
         PictureHandler.__picture_lock.release()
     
