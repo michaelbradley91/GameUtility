@@ -62,6 +62,8 @@ class ScreenCollider(object):
         @return: a list of all rectangles that collided with the given rectangle.
         '''
         outer_rectangles = self.__rectangle_collider.collide_rectangle(outer_rectangle)
+        first_x_offset = outer_rectangle[0]
+        first_y_offset = outer_rectangle[1]
         #We now check whether or not each outer rectangle collided against really was colliding.
         first_has_inner_rects = inner_rectangles!=[]
         res = []
@@ -76,21 +78,24 @@ class ScreenCollider(object):
             if len(inner_rectangles)>len(second_inner_rects):
                 if not second_has_inner_rects:
                     (x_min,y_min,x_max,y_max,_) = second_outer_rectangle
-                    if inner_collider.is_colliding((x_min,y_min,x_max,y_max)):
+                    if inner_collider.is_colliding((x_min-first_x_offset,y_min-first_y_offset,x_max-first_x_offset,y_max-first_y_offset)):
                         res.append(second_outer_rectangle)
                     continue
-                for rect in second_inner_rects:
-                    if inner_collider.is_colliding(rect):
+                for (x_min,y_min,x_max,y_max) in second_inner_rects:
+                    if inner_collider.is_colliding((x_min-first_x_offset,y_min-first_y_offset,x_max-first_x_offset,y_max-first_y_offset)):
                         res.append(second_outer_rectangle)
                         break
                 continue
             else:
+                second_x_offset = second_outer_rectangle[0]
+                second_y_offset = second_outer_rectangle[1]
                 if not first_has_inner_rects:
-                    if second_inner_collider.is_colliding(outer_rectangle):
+                    (x_min,y_min,x_max,y_max) = outer_rectangle
+                    if second_inner_collider.is_colliding((x_min-second_x_offset,y_min-second_y_offset,x_max-second_x_offset,y_max-second_y_offset)):
                         res.append(second_outer_rectangle)
                     continue
-                for rect in inner_rectangles:
-                    if second_inner_collider.is_colliding(rect):
+                for (x_min,y_min,x_max,y_max) in inner_rectangles:
+                    if second_inner_collider.is_colliding((x_min-second_x_offset,y_min-second_y_offset,x_max-second_x_offset,y_max-second_y_offset)):
                         res.append(second_outer_rectangle)
                         break
                 continue
@@ -106,6 +111,8 @@ class ScreenCollider(object):
         @return: true iff the outer rectangle is colliding with something in the collider
         '''
         outer_rectangles = self.__rectangle_collider.collide_rectangle(outer_rectangle)
+        first_x_offset = outer_rectangle[0]
+        first_y_offset = outer_rectangle[1]
         #We now check whether or not each outer rectangle collided against really was colliding.
         first_has_inner_rects = inner_rectangles!=[]
         for second_outer_rectangle in outer_rectangles:
@@ -118,20 +125,23 @@ class ScreenCollider(object):
             if len(inner_rectangles)>len(second_inner_rects):
                 if not second_has_inner_rects:
                     (x_min,y_min,x_max,y_max,_) = second_outer_rectangle
-                    if inner_collider.is_colliding((x_min,y_min,x_max,y_max)):
+                    if inner_collider.is_colliding((x_min-first_x_offset,y_min-first_y_offset,x_max-first_x_offset,y_max-first_y_offset)):
                         return True
                     continue
-                for rect in second_inner_rects:
-                    if inner_collider.is_colliding(rect):
+                for (x_min,y_min,x_max,y_max) in second_inner_rects:
+                    if inner_collider.is_colliding((x_min-first_x_offset,y_min-first_y_offset,x_max-first_x_offset,y_max-first_y_offset)):
                         return True
                 continue
             else:
+                second_x_offset = second_outer_rectangle[0]
+                second_y_offset = second_outer_rectangle[1]
                 if not first_has_inner_rects:
-                    if second_inner_collider.is_colliding(outer_rectangle):
+                    (x_min,y_min,x_max,y_max) = outer_rectangle
+                    if second_inner_collider.is_colliding((x_min-second_x_offset,y_min-second_y_offset,x_max-second_x_offset,y_max-second_y_offset)):
                         return True
                     continue
-                for rect in inner_rectangles:
-                    if second_inner_collider.is_colliding(rect):
+                for (x_min,y_min,x_max,y_max) in inner_rectangles:
+                    if second_inner_collider.is_colliding((x_min-second_x_offset,y_min-second_y_offset,x_max-second_x_offset,y_max-second_y_offset)):
                         return True
                 continue
         #Done! Res has all of the rectangles that are definitely colliding
