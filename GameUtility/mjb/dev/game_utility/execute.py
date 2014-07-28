@@ -7,7 +7,7 @@ import mjb.dev.game_utility.graphics.screen as screen
 import mjb.dev.game_utility.input_listeners.keyboard_listener as key_listeners
 import mjb.dev.game_utility.input_listeners.mouse_button_listener as mouse_button_listeners
 import mjb.dev.game_utility.input_listeners.mouse_motion_listener as mouse_motion_listeners
-import mjb.dev.game_utility.graphics.picture_handling.picture_handler as picture_handler
+import mjb.dev.game_utility.graphics.picture_handler as picture_handler
 import pygame.locals
 import mjb.dev.game_utility.graphics.collisions.large_rectangle_tree as rect_tree
 import mjb.dev.game_utility.graphics.utility.rectangle_filler as rect_filler

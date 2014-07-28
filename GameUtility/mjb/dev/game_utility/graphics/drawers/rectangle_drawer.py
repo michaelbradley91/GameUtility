@@ -4,7 +4,7 @@ Created on 21 Jul 2014
 @author: michael
 '''
 
-import mjb.dev.game_utility.graphics.picture_handling.picture_handler as picture_handler
+import mjb.dev.game_utility.graphics.picture_handler as picture_handler
 
 class RectangleDrawer(picture_handler.Drawer):
     '''
