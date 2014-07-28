@@ -146,9 +146,9 @@ class SmallRectangleTree(collider.RectangleCollider):
         if not self.__is_inside_screen((x_min,y_min,x_max,y_max,None)):
             return []
         #Convert the rectangle
-        rect = self.__convert_rect(rect)
+        rect = self.__convert_rect((x_min,y_min,x_max,y_max,None))
         #We need to return all rectangles on all sides in a recursive manner. We will do this recursively...
-        (x_min, y_min, x_max, y_max) = rect
+        (x_min, y_min, x_max, y_max, _) = rect
         coord_rect = (x_max, y_max, x_min, y_min)
         return self.__collide_rectangle(coord_rect, self.__root, 0)
         
@@ -179,9 +179,9 @@ class SmallRectangleTree(collider.RectangleCollider):
             res = self.__collide_rectangle(coord_rect,current_node[coord],dim+1)
             #Add the other results
             if dim%4==0:
-                new_rect = (self.__width, y_max, x_min, y_min, None)
+                new_rect = (self.__width, y_max, x_min, y_min)
             else:
-                new_rect = (x_max, self.__height, x_min, y_min, None)
+                new_rect = (x_max, self.__height, x_min, y_min)
             #We change the coordinates so that we intersect against all the other rectangles
             for min_coord in range(1,coord):
                 res.extend(self.__collide_rectangle(new_rect, current_node[min_coord], dim+1))
@@ -191,9 +191,9 @@ class SmallRectangleTree(collider.RectangleCollider):
             res = self.__collide_rectangle(coord_rect, current_node[coord], dim+1)
             #Add the other results
             if dim%4==1:
-                new_rect = (x_max, y_max, 0, y_min, None)
+                new_rect = (x_max, y_max, 0, y_min)
             else:
-                new_rect = (x_max, y_max, x_min, 0, None)
+                new_rect = (x_max, y_max, x_min, 0)
             #Intersect in the other quadrants
             for max_coord in range(coord+1,5):
                 res.extend(self.__collide_rectangle(new_rect, current_node[max_coord], dim+1))
@@ -210,9 +210,9 @@ class SmallRectangleTree(collider.RectangleCollider):
         if not self.__is_inside_screen((x_min,y_min,x_max,y_max,None)):
             return False
         #Convert the rectangle
-        rect = self.__convert_rect(rect)
+        rect = self.__convert_rect((x_min,y_min,x_max,y_max,None))
         #We need to return all rectangles on all sides in a recursive manner. We will do this recursively...
-        (x_min, y_min, x_max, y_max) = rect
+        (x_min, y_min, x_max, y_max, _) = rect
         coord_rect = (x_max, y_max, x_min, y_min)
         return self.__collide_rectangle(coord_rect, self.__root, 0)
         
@@ -242,9 +242,9 @@ class SmallRectangleTree(collider.RectangleCollider):
                 return True
             #Add the other results
             if dim%4==0:
-                new_rect = (self.__width, y_max, x_min, y_min, None)
+                new_rect = (self.__width, y_max, x_min, y_min)
             else:
-                new_rect = (x_max, self.__height, x_min, y_min, None)
+                new_rect = (x_max, self.__height, x_min, y_min)
             #We change the coordinates so that we intersect against all the other rectangles
             for min_coord in range(1,coord):
                 if (self.__is_colliding(new_rect, current_node[min_coord], dim+1)):
@@ -256,9 +256,9 @@ class SmallRectangleTree(collider.RectangleCollider):
                 return True
             #Add the other results
             if dim%4==1:
-                new_rect = (x_max, y_max, 0, y_min, None)
+                new_rect = (x_max, y_max, 0, y_min)
             else:
-                new_rect = (x_max, y_max, x_min, 0, None)
+                new_rect = (x_max, y_max, x_min, 0)
             #Intersect in the other quadrants
             for max_coord in range(coord+1,5):
                 if (self.__is_colliding(new_rect, current_node[max_coord], dim+1)):

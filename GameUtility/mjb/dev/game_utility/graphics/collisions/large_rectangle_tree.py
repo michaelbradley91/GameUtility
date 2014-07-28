@@ -144,9 +144,9 @@ class LargeRectangleTree(collider.RectangleCollider):
         if not self.__is_inside_screen((x_min,y_min,x_max,y_max,None)):
             return []
         #Convert the rectangle
-        rect = self.__convert_rect(rect)
+        rect = self.__convert_rect((x_min,y_min,x_max,y_max,None))
         #We need to return all rectangles on all sides in a recursive manner. We will do this recursively...
-        (x_min, y_min, x_max, y_max) = rect
+        (x_min, y_min, x_max, y_max, _) = rect
         coord_rect = (x_max, y_max, x_min, y_min)
         return self.__collide_rectangle(coord_rect, self.__root, 0)
     
@@ -177,9 +177,9 @@ class LargeRectangleTree(collider.RectangleCollider):
             res = self.__collide_rectangle(coord_rect,current_node[coord],dim+1)
             #Add the other results
             if dim%4==0:
-                new_rect = (self.__width, y_max, x_min, y_min, None)
+                new_rect = (self.__width, y_max, x_min, y_min)
             else:
-                new_rect = (x_max, self.__height, x_min, y_min, None)
+                new_rect = (x_max, self.__height, x_min, y_min)
             #We change the coordinates so that we intersect against all the other rectangles
             for min_coord in range(1,coord):
                 res.extend(self.__collide_rectangle(new_rect, current_node[min_coord], dim+1))
@@ -189,9 +189,9 @@ class LargeRectangleTree(collider.RectangleCollider):
             res = self.__collide_rectangle(coord_rect, current_node[coord], dim+1)
             #Add the other results
             if dim%4==1:
-                new_rect = (x_max, y_max, 0, y_min, None)
+                new_rect = (x_max, y_max, 0, y_min)
             else:
-                new_rect = (x_max, y_max, x_min, 0, None)
+                new_rect = (x_max, y_max, x_min, 0)
             #Intersect in the other quadrants
             for max_coord in range(coord+1,5):
                 res.extend(self.__collide_rectangle(new_rect, current_node[max_coord], dim+1))
@@ -210,9 +210,9 @@ class LargeRectangleTree(collider.RectangleCollider):
         if not self.__is_inside_screen((x_min,y_min,x_max,y_max,None)):
             return False
         #Convert the rectangle
-        rect = self.__convert_rect(rect)
+        rect = self.__convert_rect((x_min,y_min,x_max,y_max,None))
         #We need to return all rectangles on all sides in a recursive manner. We will do this recursively...
-        (x_min, y_min, x_max, y_max) = rect
+        (x_min, y_min, x_max, y_max, _) = rect
         coord_rect = (x_max, y_max, x_min, y_min)
         return self.__collide_rectangle(coord_rect, self.__root, 0)
         
@@ -242,9 +242,9 @@ class LargeRectangleTree(collider.RectangleCollider):
                 return True
             #Add the other results
             if dim%4==0:
-                new_rect = (self.__width, y_max, x_min, y_min, None)
+                new_rect = (self.__width, y_max, x_min, y_min)
             else:
-                new_rect = (x_max, self.__height, x_min, y_min, None)
+                new_rect = (x_max, self.__height, x_min, y_min)
             #We change the coordinates so that we intersect against all the other rectangles
             for min_coord in range(1,coord):
                 if (self.__is_colliding(new_rect, current_node[min_coord], dim+1)):
@@ -256,9 +256,9 @@ class LargeRectangleTree(collider.RectangleCollider):
                 return True
             #Add the other results
             if dim%4==1:
-                new_rect = (x_max, y_max, 0, y_min, None)
+                new_rect = (x_max, y_max, 0, y_min)
             else:
-                new_rect = (x_max, y_max, x_min, 0, None)
+                new_rect = (x_max, y_max, x_min, 0)
             #Intersect in the other quadrants
             for max_coord in range(coord+1,5):
                 if (self.__is_colliding(new_rect, current_node[max_coord], dim+1)):
@@ -321,14 +321,14 @@ class LargeRectangleTree(collider.RectangleCollider):
         This function initialises the coordinate map so that coordinates can be returned quickly
         '''
         self.__coordinate_map = collections.defaultdict(lambda:None)
-        self.__coordinate_map[0] = lambda (x_min, y_min, x_max, y_max, _): self.__width_coordinate[x_min]/4
-        self.__coordinate_map[1] = lambda (x_min, y_min, x_max, y_max, _): self.__width_coordinate[x_max]/4
-        self.__coordinate_map[2] = lambda (x_min, y_min, x_max, y_max, _): self.__height_coordinate[y_min]/4
-        self.__coordinate_map[3] = lambda (x_min, y_min, x_max, y_max, _): self.__height_coordinate[y_max]/4
-        self.__coordinate_map[4] = lambda (x_min, y_min, x_max, y_max, _): self.__width_coordinate[x_min]%4
-        self.__coordinate_map[5] = lambda (x_min, y_min, x_max, y_max, _): self.__width_coordinate[x_max]%4
-        self.__coordinate_map[6] = lambda (x_min, y_min, x_max, y_max, _): self.__height_coordinate[y_min]%4
-        self.__coordinate_map[7] = lambda (x_min, y_min, x_max, y_max, _): self.__height_coordinate[y_max]%4
+        self.__coordinate_map[0] = lambda rect: self.__width_coordinate[rect[0]]/4
+        self.__coordinate_map[1] = lambda rect: self.__width_coordinate[rect[2]]/4
+        self.__coordinate_map[2] = lambda rect: self.__height_coordinate[rect[1]]/4
+        self.__coordinate_map[3] = lambda rect: self.__height_coordinate[rect[3]]/4
+        self.__coordinate_map[4] = lambda rect: self.__width_coordinate[rect[0]]%4
+        self.__coordinate_map[5] = lambda rect: self.__width_coordinate[rect[2]]%4
+        self.__coordinate_map[6] = lambda rect: self.__height_coordinate[rect[1]]%4
+        self.__coordinate_map[7] = lambda rect: self.__height_coordinate[rect[3]]%4
     
     def __get_coordinate(self, rect, dim):
         '''

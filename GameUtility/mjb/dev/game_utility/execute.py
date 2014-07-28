@@ -16,7 +16,7 @@ import mjb.dev.game_utility.input_listeners.frame_listener as frame_listeners
 import time
 import mjb.dev.game_utility.test_bed as test_bed
 import mjb.dev.game_utility.graphics.image as image
-'''
+
 class DummyKeyListener(key_listeners.KeyboardListener,frame_listeners.FrameListener):
     
     def __init__(self, keys):
@@ -118,7 +118,7 @@ class DummyMouseMotionListener(mouse_motion_listeners.MouseMotionListener):
     def mouse_moved(self,mouse_position):
         pass
         #print("Mouse moved to " + str(mouse_position))
-'''
+
 def run():
     current_milli_time = lambda: int(round(time.time() * 1000))
     '''Run the application!!! (For test purposes)'''
@@ -144,24 +144,24 @@ def run():
     print(res); #[0,0,0,0,1,2,2,2]
     '''
     '''Initialise the picture handler!'''
-    current_milli_time = lambda: int(round(time.time() * 1000))
     
     screen.Screen.initialise("My game",(100,100,100))
     picture_handler.PictureHandler.initialise()
     #Create a keyboard listener...
-    '''
+    
     key_listener = DummyKeyListener([pygame.locals.K_ESCAPE,
                                      pygame.locals.K_LEFT,
                                      pygame.locals.K_RIGHT,
                                      pygame.locals.K_UP,
                                      pygame.locals.K_DOWN])
-    '''
-    #key_listener.start()
-    #DummyMouseButtonListener()
-    #DummyMouseMotionListener()
+    
+    key_listener.start()
+    DummyMouseButtonListener()
+    DummyMouseMotionListener()
     #Start the game loop!
-    #screen.Screen.start_game_loop()
+    screen.Screen.start_game_loop()
     #Test it out...
+    '''
     my_surface = pygame.Surface((6,6))
     invisible = (255,0,0)
     my_surface.set_colorkey(invisible,pygame.locals.RLEACCEL)
@@ -177,5 +177,6 @@ def run():
     my_image = image.Image(my_surface)
     precision = 1
     print("Covering rect " + str(my_image._calculate_rectangle_approximation(precision)))
+    '''
     #test_bed.run()
     

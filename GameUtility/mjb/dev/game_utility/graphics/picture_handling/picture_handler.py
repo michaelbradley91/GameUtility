@@ -194,9 +194,8 @@ class PictureHandler(object):
     __picture_rectangle_tree = None
     #The rectangles that need to be added to the tree...
     __screen_rectangles_to_add = []
-    
-    #A map from the drawer to the rectangles...
-    __drawer_to_rectangles_map = None
+    #Remember the rectangles drawers are associated to...
+    __drawer_to_outer_rectangle = collections.defaultdict(lambda:None)
     
     @staticmethod
     def initialise():
@@ -219,8 +218,6 @@ class PictureHandler(object):
         Screen.set_picture_handler(PictureHandler.__handler)
         #Initialise the grid mechanism
         PictureHandler.__initialise_grid()
-        #Setup the rectangle to drawer map
-        PictureHandler.__drawer_to_rectangles_map = collections.defaultdict(lambda:None)
         #Remember we did this!
         PictureHandler.__initialised = True
         
@@ -289,8 +286,8 @@ class PictureHandler(object):
             #Use a large rectangle tree to hold the picture
             LargeRectangleTree(PictureHandler.__size),
             #Extract the inner rectangles from the drawer
-            lambda (_,_,_,_,(_,drawer)): drawer.get_inner_rectangles(),
-            lambda (_,_,_,_,(_,drawer)): drawer.get_inner_collider()
+            lambda (a,b,c,d,drawer): drawer.get_inner_rectangles(),
+            lambda (a,b,c,d,drawer): drawer.get_inner_collider()
             )
         
     @staticmethod
@@ -299,7 +296,7 @@ class PictureHandler(object):
         Fill the rectangle tree for the screen (not the images)
         '''
         for rect in PictureHandler.__screen_rectangles_to_add:
-            PictureHandler.__screen_rectangle_tree.insert_rectangle(rect)
+            PictureHandler.__screen_rectangle_tree.insert_outer_rectangle(rect)
         #Really simple
     
     @staticmethod
@@ -308,19 +305,19 @@ class PictureHandler(object):
         Add a given drawer to the screen
         @param drawer: the drawer to add
         '''
-        rect = drawer.get_bounding_rectangle()
+        rect = PictureHandler.__drawer_to_outer_rectangle[drawer]
         #Add the rectangle to the screen rectangle tree by colliding it first
-        #TODO REMOVE print("Adding rectangle " + str(rect))
-        collided_rects = PictureHandler.__screen_rectangle_tree.collide_rectangle(
+        print("Adding rectangle " + str(rect))
+        collided_rects = PictureHandler.__screen_rectangle_tree.collide_outer_rectangle(
             rect,drawer.get_inner_rectangles(),drawer.get_inner_collider())
-        #TODO REMOVE print("Got collided rectangles " + str(collided_rects))
+        print("Got collided rectangles " + str(collided_rects))
         #Now remove the collided rectangles
         for rect in collided_rects:
-            was_removed = PictureHandler.__screen_rectangle_tree.remove_rectangle(rect)
+            was_removed = PictureHandler.__screen_rectangle_tree.remove_outer_rectangle(rect)
             if was_removed:
                 PictureHandler.__screen_rectangles_to_add.append(rect)
         #Done!
-        #TODO REMOVE print("Got update list as " + str(PictureHandler.__screen_rectangles_to_add))
+        print("Got update list as " + str(PictureHandler.__screen_rectangles_to_add))
         
     @staticmethod
     def __calculate_screen_update_list():
@@ -332,20 +329,20 @@ class PictureHandler(object):
         @return: a list of rectangles to use to update the screen, in the form
         of (x_min, y_min, x_max, y_max, None) (key for the next tree)
         '''
-        #TODO REMOVE print("Calculating update list")
+        print("Calculating update list")
         #Firstly, gather the coordinates and update the screen rectangle tree...
         coords = []
         for rect in PictureHandler.__screen_rectangles_to_add:
             (_,_,_,_,(x,y)) = rect
             coords.append((x,y))
             #Now fill the rectangle tree again
-            PictureHandler.__screen_rectangle_tree.insert_rectangle(rect)
+            PictureHandler.__screen_rectangle_tree.insert_outer_rectangle(rect)
         #Empty the update list
-        #TODO REMOVE print("Filling coords " + str(coords))
+        print("Filling coords " + str(coords))
         PictureHandler.__screen_rectangles_to_add = []
         #Calculate the covering rectangles...
         covering_rects = RectangleFiller.fill_grid(coords)
-        #TODO REMOVE print("Got covering rectangles " + str(covering_rects))
+        print("Got covering rectangles " + str(covering_rects))
         #Recalculate from these rectangles the screen rectangles to update against...
         screen_rects = []
         for (x_coord_min, y_coord_min, x_coord_max, y_coord_max) in covering_rects:
@@ -353,7 +350,7 @@ class PictureHandler(object):
                                  PictureHandler.__MIN_Y_COORD_SCREEN_CONVERSION[y_coord_min],
                                  PictureHandler.__MAX_X_COORD_SCREEN_CONVERSION[x_coord_max],
                                  PictureHandler.__MAX_Y_COORD_SCREEN_CONVERSION[y_coord_max]))
-        #TODO REMOVE print("Got screen update rectangles as " + str(screen_rects))
+        print("Got screen update rectangles as " + str(screen_rects))
         #Got them all!
         return screen_rects
     
@@ -367,10 +364,10 @@ class PictureHandler(object):
         '''
         (x_min,y_min,x_max,y_max) = rect
         #Now work out everyone who needs to redraw...
-        collided_rectangles = PictureHandler.__picture_rectangle_tree.collide_rectangle((x_min,y_min,x_max,y_max))
+        collided_rectangles = PictureHandler.__picture_rectangle_tree.collide_outer_rectangle((x_min,y_min,x_max,y_max))
         #Gather them up, and order them by depth
         collided_list = []
-        #TODO REMOVE print("Got collided rectangles " + str(collided_rectangles))
+        print("Got collided rectangles " + str(collided_rectangles))
         for (_,_,_,_,drawer) in collided_rectangles:
             collided_list.append(((drawer.get_depth(),drawer._get_unique_id()),drawer))
         #Sort by the first element only
@@ -398,7 +395,7 @@ class PictureHandler(object):
             picture_slab = pygame.Surface((width,height))
             picture_slab = picture_slab.convert()
             picture_slab.fill(PictureHandler.__background_colour)
-            #TODO REMOVE print("Made update slab with size " + str((width,height)))
+            print("Made update slab with size " + str((width,height)))
             #Ready to perform the updates!!
             PictureHandler.__update_surface_slab(picture_slab,(x_min,y_min,x_max,y_max))
             #Finally, blit it to the picture and register the update...
@@ -406,7 +403,7 @@ class PictureHandler(object):
             #Should have worked I think...
             converted_update_list.append((x_min,y_min,width,height))
         #Return the relevant stuff...
-        #TODO REMOVE print("Requesting screen updates on " + str(converted_update_list))
+        print("Requesting screen updates on " + str(converted_update_list))
         return (PictureHandler.__picture,converted_update_list)
     
     @staticmethod
@@ -420,16 +417,18 @@ class PictureHandler(object):
     @staticmethod
     def __deregister_drawer(drawer):
         '''
-        Exactly the same as deregister_rectangles - but does not acquire the synchronising lock
+        Exactly the same as deregister_drawer - but does not acquire the synchronising lock
         You should not deregister twice.
         @param drawer: the drawer to deregister. Note that undoing any updates triggered
         is too complex to be worth the trouble...
         '''
         #Remove from the tree
-        (x_min,y_min,x_max,y_max) = drawer.get_bounding_rectangle()
-        PictureHandler.__picture_rectangle_tree.remove_rectangle((x_min,y_min,x_max,y_max,drawer))
+        (x_min,y_min,x_max,y_max) = PictureHandler.__drawer_to_outer_rectangle[drawer]
+        PictureHandler.__picture_rectangle_tree.remove_outer_rectangle((x_min,y_min,x_max,y_max,drawer))
         #Update the screen...
         PictureHandler.__add_to_screen(drawer)
+        #Remove! (Strictly after the above call, as it uses the rectangl
+        PictureHandler.__drawer_to_outer_rectangle[drawer] = None
     
     @staticmethod
     def register_drawer(drawer):
@@ -449,20 +448,21 @@ class PictureHandler(object):
         PictureHandler.__picture_lock.acquire()
         #Add the key (the depth + drawer) to the rectangles...
         (x_min,y_min,x_max,y_max) = drawer.get_bounding_rectangle()
+        PictureHandler.__drawer_to_outer_rectangle[drawer] = (x_min,y_min,x_max,y_max)
         #Add to the screen for the updates
         '''
         Note: this method doesn't need the key since it is
         calculating the screen update rectangles. These are separate rectangles.
         The rectangle passed in is not stored.
         '''
-        PictureHandler.__add_to_screen((x_min,y_min,x_max,y_max))
+        PictureHandler.__add_to_screen(drawer)
         #Add to the picture handler's screen
-        PictureHandler.__picture_rectangle_tree.insert_rectangle((x_min,y_min,x_max,y_max,drawer))
+        PictureHandler.__picture_rectangle_tree.insert_outer_rectangle((x_min,y_min,x_max,y_max,drawer))
         #That should be everything..?
         PictureHandler.__picture_lock.release()
     
     @staticmethod
-    def deregister_rectangles(drawer):
+    def deregister_drawer(drawer):
         '''
         Deregister this drawer from the picture, meaning it will be erased in the next frame
         from the picture. Note that if this is called concurrently, you may be forced to draw
@@ -471,6 +471,6 @@ class PictureHandler(object):
         '''
         PictureHandler.__picture_lock.acquire()
         #We should call the auxiliary...
-        PictureHandler.__deregister_rectangles(drawer)
+        PictureHandler.__deregister_drawer(drawer)
         PictureHandler.__picture_lock.release()
     

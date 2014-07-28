@@ -31,7 +31,7 @@ class RectangleDrawer(picture_handler.Drawer):
         #TODO: ACTUALLY LISTEN TO PARAMS
         if self.__visible:
             #Register with the picture handler so that I will appear!
-            picture_handler.PictureHandler.register_rectangles(self, [self.__rect], self.__depth)
+            picture_handler.PictureHandler.register_drawer(self)
     
     #Override
     def redraw(self, top_left, surface):
@@ -61,13 +61,13 @@ class RectangleDrawer(picture_handler.Drawer):
         '''
         To remove code duplication, register myself with the picture handler
         '''
-        picture_handler.PictureHandler.register_rectangles(self, [self.__rect], self.__depth)
+        picture_handler.PictureHandler.register_drawer(self)
     
     def __deregister(self):
         '''
         To remove code duplication, deregister myself with the picture handler
         '''
-        picture_handler.PictureHandler.deregister_rectangles(self)
+        picture_handler.PictureHandler.deregister_drawer(self)
     
     def set_rectangle(self,rect):
         '''
@@ -99,6 +99,17 @@ class RectangleDrawer(picture_handler.Drawer):
         (x_min,y_min,width,height) = self.__rect
         self.set_rectangle((x_min+x_move,y_min+y_move,width,height))
         
+    def set_depth(self,depth):
+        '''
+        @param depth: the depth you wish this to now draw at
+        '''
+        if self.__depth!=depth:
+            self.__depth = depth
+            if self.__visible:
+                #Redraw!
+                self.__deregister()
+                self.__register()
+        
     #Get the various properties...
     def get_rectangle(self):
         '''
@@ -118,3 +129,32 @@ class RectangleDrawer(picture_handler.Drawer):
         '''
         return self.__visible
         
+    def get_bounding_rectangle(self):
+        '''
+        @return: a rectangle in the form of (x_min,y_min,x_max,y_max) covering the whole
+        area that the drawer might draw in. This should not change.
+        '''
+        return self.__rect
+    
+    def get_inner_rectangles(self):
+        '''
+        @return: the inner rectangles more accurately representing the space occupied by
+        the drawer. This is intended to remain static (change the drawer if the image
+        changes). The rectangles should be of the form (x_min,y_min,x_max,y_max).
+        Use an empty list if the bounding rectangle is accurate enough.
+        This should not change.
+        '''
+        return []
+    
+    def get_inner_collider(self):
+        '''
+        @return: a rectangle collider containing all of the inner rectangles.
+        Leave this as None if no such rectangle is required. This should not change.
+        '''
+        return None
+    
+    def get_depth(self):
+        '''
+        @return: the depth this drawer wishes to draw at. This should not change.
+        '''
+        return self.__depth
