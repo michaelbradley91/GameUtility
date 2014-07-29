@@ -214,7 +214,7 @@ class LargeRectangleTree(collider.RectangleCollider):
         #We need to return all rectangles on all sides in a recursive manner. We will do this recursively...
         (x_min, y_min, x_max, y_max, _) = rect
         coord_rect = (x_max, y_max, x_min, y_min)
-        return self.__collide_rectangle(coord_rect, self.__root, 0)
+        return self.__is_colliding(coord_rect, self.__root, 0)
         
     def __is_colliding(self, coord_rect, current_node, dim):
         '''

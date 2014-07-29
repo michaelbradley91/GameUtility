@@ -151,7 +151,7 @@ class SmallRectangleTree(collider.RectangleCollider):
         (x_min, y_min, x_max, y_max, _) = rect
         coord_rect = (x_max, y_max, x_min, y_min)
         return self.__collide_rectangle(coord_rect, self.__root, 0)
-        
+    
     def __collide_rectangle(self, coord_rect, current_node, dim):
         '''
         @param coord_rect: the rectangle with its coordinate representation
@@ -177,26 +177,17 @@ class SmallRectangleTree(collider.RectangleCollider):
             #This is a min coordinate. We need all rectangles whose min coordinate is less than our max.
             #Thus we look in our quadrant, and unconditionally in quadrants less than it
             res = self.__collide_rectangle(coord_rect,current_node[coord],dim+1)
-            #Add the other results
-            if dim%4==0:
-                new_rect = (self.__width, y_max, x_min, y_min)
-            else:
-                new_rect = (x_max, self.__height, x_min, y_min)
             #We change the coordinates so that we intersect against all the other rectangles
             for min_coord in range(1,coord):
-                res.extend(self.__collide_rectangle(new_rect, current_node[min_coord], dim+1))
+                res.extend(self.__collide_rectangle(coord_rect, current_node[min_coord], dim+1))
             return res
         else:
             #This is a max coordinate, so we need rectangles whose max coordinate is any greater than our min.
             res = self.__collide_rectangle(coord_rect, current_node[coord], dim+1)
             #Add the other results
-            if dim%4==1:
-                new_rect = (x_max, y_max, 0, y_min)
-            else:
-                new_rect = (x_max, y_max, x_min, 0)
             #Intersect in the other quadrants
             for max_coord in range(coord+1,5):
-                res.extend(self.__collide_rectangle(new_rect, current_node[max_coord], dim+1))
+                res.extend(self.__collide_rectangle(coord_rect, current_node[max_coord], dim+1))
             return res
     
     def is_colliding(self, rect):
@@ -214,7 +205,7 @@ class SmallRectangleTree(collider.RectangleCollider):
         #We need to return all rectangles on all sides in a recursive manner. We will do this recursively...
         (x_min, y_min, x_max, y_max, _) = rect
         coord_rect = (x_max, y_max, x_min, y_min)
-        return self.__collide_rectangle(coord_rect, self.__root, 0)
+        return self.__is_colliding(coord_rect, self.__root, 0)
         
     def __is_colliding(self, coord_rect, current_node, dim):
         '''
@@ -273,18 +264,22 @@ class SmallRectangleTree(collider.RectangleCollider):
         '''
         (x_min, y_min, x_max, y_max, _) = rect
         return x_max>0 and y_max>0 and x_min<self.__width and y_min<self.__height and x_max!=x_min and y_max!=y_min
-        
+    
     def __get_coordinate(self, rect, dim):
         '''
         @param rect: the rectangle whose coordinates in the 4 dimensional array you would like
         @param dim: the level of recursion in the array for the index you would like (0 being the first)
         @return: the relevant coordinate
         '''
-        val = rect[dim]
+        if dim==0 or dim==3:
+            val = rect[dim]
+        else:
+            val = rect[3-dim]
         if dim<=1:
             #x coordinate!
             return min(3,val / self.__width_divider)
         else:
+            #y coordinate!
             return min(3,val / self.__height_divider)
         
     def __convert_rect(self, rect):

@@ -305,17 +305,17 @@ class PictureHandler(object):
         '''
         rect = drawer.get_bounding_rectangle()
         #Add the rectangle to the screen rectangle tree by colliding it first
-        print("Adding rectangle " + str(rect))
+        #TODO REMOVE print("Adding rectangle " + str(rect))
         collided_rects = PictureHandler.__screen_rectangle_tree.collide_outer_rectangle(
             rect,drawer.get_inner_rectangles(),drawer.get_inner_collider())
-        print("Got collided rectangles " + str(collided_rects))
+        #TODO REMOVE print("Got collided rectangles " + str(collided_rects))
         #Now remove the collided rectangles
         for rect in collided_rects:
             was_removed = PictureHandler.__screen_rectangle_tree.remove_outer_rectangle(rect)
             if was_removed:
                 PictureHandler.__screen_rectangles_to_add.append(rect)
         #Done!
-        print("Got update list as " + str(PictureHandler.__screen_rectangles_to_add))
+        #TODO REMOVE print("Got update list as " + str(PictureHandler.__screen_rectangles_to_add))
         
     @staticmethod
     def __calculate_screen_update_list():
@@ -327,7 +327,7 @@ class PictureHandler(object):
         @return: a list of rectangles to use to update the screen, in the form
         of (x_min, y_min, x_max, y_max, None) (key for the next tree)
         '''
-        print("Calculating update list")
+        #TODO REMOVE print("Calculating update list")
         #Firstly, gather the coordinates and update the screen rectangle tree...
         coords = []
         for rect in PictureHandler.__screen_rectangles_to_add:
@@ -336,11 +336,11 @@ class PictureHandler(object):
             #Now fill the rectangle tree again
             PictureHandler.__screen_rectangle_tree.insert_outer_rectangle(rect)
         #Empty the update list
-        print("Filling coords " + str(coords))
+        #TODO REMOVE print("Filling coords " + str(coords))
         PictureHandler.__screen_rectangles_to_add = []
         #Calculate the covering rectangles...
         covering_rects = RectangleFiller.fill_grid(coords)
-        print("Got covering rectangles " + str(covering_rects))
+        #TODO REMOVE print("Got covering rectangles " + str(covering_rects))
         #Recalculate from these rectangles the screen rectangles to update against...
         screen_rects = []
         for (x_coord_min, y_coord_min, x_coord_max, y_coord_max) in covering_rects:
@@ -348,7 +348,7 @@ class PictureHandler(object):
                                  PictureHandler.__MIN_Y_COORD_SCREEN_CONVERSION[y_coord_min],
                                  PictureHandler.__MAX_X_COORD_SCREEN_CONVERSION[x_coord_max],
                                  PictureHandler.__MAX_Y_COORD_SCREEN_CONVERSION[y_coord_max]))
-        print("Got screen update rectangles as " + str(screen_rects))
+        #TODO REMOVE print("Got screen update rectangles as " + str(screen_rects))
         #Got them all!
         return screen_rects
     
@@ -365,7 +365,7 @@ class PictureHandler(object):
         collided_rectangles = PictureHandler.__picture_rectangle_tree.collide_outer_rectangle((x_min,y_min,x_max,y_max))
         #Gather them up, and order them by depth
         collided_list = []
-        print("Got collided rectangles " + str(collided_rectangles))
+        #TODO REMOVE print("Got collided rectangles " + str(collided_rectangles))
         for (_,_,_,_,drawer) in collided_rectangles:
             collided_list.append(((drawer.get_depth(),drawer._get_unique_id()),drawer))
         #Sort by the first element only
@@ -393,7 +393,7 @@ class PictureHandler(object):
             picture_slab = pygame.Surface((width,height))
             picture_slab = picture_slab.convert()
             picture_slab.fill(PictureHandler.__background_colour)
-            print("Made update slab with size " + str((width,height)))
+            #TODO REMOVE print("Made update slab with size " + str((width,height)))
             #Ready to perform the updates!!
             PictureHandler.__update_surface_slab(picture_slab,(x_min,y_min,x_max,y_max))
             #Finally, blit it to the picture and register the update...
@@ -401,7 +401,7 @@ class PictureHandler(object):
             #Should have worked I think...
             converted_update_list.append((x_min,y_min,width,height))
         #Return the relevant stuff...
-        print("Requesting screen updates on " + str(converted_update_list))
+        #TODO REMOVE print("Requesting screen updates on " + str(converted_update_list))
         return (PictureHandler.__picture,converted_update_list)
     
     @staticmethod

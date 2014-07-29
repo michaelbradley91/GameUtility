@@ -7,7 +7,7 @@ import unittest
 import mjb.test.game_utility.graphics.collisions.test_rectangle_collider as test_rectangle_collider
 from mjb.dev.game_utility.graphics.collisions.simple_rectangle_collider import SimpleRectangleCollider 
 
-class TestSimpleRectangleTree(unittest.TestCase):
+class TestSimpleRectangleCollider(unittest.TestCase):
     '''
     Test class for simple_rectangle_collider.py
     '''
@@ -21,13 +21,17 @@ class TestSimpleRectangleTree(unittest.TestCase):
     def test_clipping(self):
         test_rectangle_collider.test_clipping(self, lambda size: SimpleRectangleCollider(size))
     
+    def test_collision(self):
+        test_rectangle_collider.test_collision(self, lambda size: SimpleRectangleCollider(size))
+    
+    
 def suite():
     '''
     Add all test methods in this module to the suite!
     '''
     test_suite = unittest.TestSuite(
         [#Add all classes here
-         unittest.TestLoader().loadTestsFromTestCase(TestSimpleRectangleTree)
+         unittest.TestLoader().loadTestsFromTestCase(TestSimpleRectangleCollider)
         ])
     return test_suite
 
