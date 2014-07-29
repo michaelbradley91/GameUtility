@@ -194,8 +194,6 @@ class PictureHandler(object):
     __picture_rectangle_tree = None
     #The rectangles that need to be added to the tree...
     __screen_rectangles_to_add = []
-    #Remember the rectangles drawers are associated to...
-    __drawer_to_outer_rectangle = collections.defaultdict(lambda:None)
     
     @staticmethod
     def initialise():
@@ -305,7 +303,7 @@ class PictureHandler(object):
         Add a given drawer to the screen
         @param drawer: the drawer to add
         '''
-        rect = PictureHandler.__drawer_to_outer_rectangle[drawer]
+        rect = drawer.get_bounding_rectangle()
         #Add the rectangle to the screen rectangle tree by colliding it first
         print("Adding rectangle " + str(rect))
         collided_rects = PictureHandler.__screen_rectangle_tree.collide_outer_rectangle(
@@ -423,12 +421,10 @@ class PictureHandler(object):
         is too complex to be worth the trouble...
         '''
         #Remove from the tree
-        (x_min,y_min,x_max,y_max) = PictureHandler.__drawer_to_outer_rectangle[drawer]
+        (x_min,y_min,x_max,y_max) = drawer.get_bounding_rectangle()
         PictureHandler.__picture_rectangle_tree.remove_outer_rectangle((x_min,y_min,x_max,y_max,drawer))
         #Update the screen...
         PictureHandler.__add_to_screen(drawer)
-        #Remove! (Strictly after the above call, as it uses the rectangl
-        PictureHandler.__drawer_to_outer_rectangle[drawer] = None
     
     @staticmethod
     def register_drawer(drawer):
@@ -448,7 +444,6 @@ class PictureHandler(object):
         PictureHandler.__picture_lock.acquire()
         #Add the key (the depth + drawer) to the rectangles...
         (x_min,y_min,x_max,y_max) = drawer.get_bounding_rectangle()
-        PictureHandler.__drawer_to_outer_rectangle[drawer] = (x_min,y_min,x_max,y_max)
         #Add to the screen for the updates
         '''
         Note: this method doesn't need the key since it is
@@ -468,6 +463,8 @@ class PictureHandler(object):
         from the picture. Note that if this is called concurrently, you may be forced to draw
         again before deregistration completes as a lock may be held on the picture.
         @param drawer: the drawer to erase from the picture.
+        @warning: you must have the same bounding rectangle, and the same inner collider
+        and inner rectangles when you deregister, as you had when you previously registered.
         '''
         PictureHandler.__picture_lock.acquire()
         #We should call the auxiliary...

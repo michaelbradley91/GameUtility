@@ -74,11 +74,14 @@ class RectangleDrawer(picture_handler.Drawer):
         @param rect: set the new rectangular area to be covered by this rectangle (separately from the colour) 
         '''
         if self.__rect!=rect:
-            self.__rect = rect
             if self.__visible:
                 #Redraw!
                 self.__deregister()
+                #Change after deregistration
+                self.__rect = rect
                 self.__register()
+            else:
+                self.__rect = rect
                 
     def set_colour(self,colour):
         '''
