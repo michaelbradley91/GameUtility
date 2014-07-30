@@ -294,7 +294,7 @@ class PictureHandler(object):
         Fill the rectangle tree for the screen (not the images)
         '''
         for rect in PictureHandler.__screen_rectangles_to_add:
-            PictureHandler.__screen_rectangle_tree.insert_outer_rectangle(rect)
+            PictureHandler.__screen_rectangle_tree.insert_rectangle(rect)
         #Really simple
     
     @staticmethod
@@ -306,12 +306,12 @@ class PictureHandler(object):
         rect = drawer.get_bounding_rectangle()
         #Add the rectangle to the screen rectangle tree by colliding it first
         #TODO REMOVE print("Adding rectangle " + str(rect))
-        collided_rects = PictureHandler.__screen_rectangle_tree.collide_outer_rectangle(
+        collided_rects = PictureHandler.__screen_rectangle_tree.collide_rectangle(
             rect,drawer.get_inner_rectangles(),drawer.get_inner_collider())
         #TODO REMOVE print("Got collided rectangles " + str(collided_rects))
         #Now remove the collided rectangles
         for rect in collided_rects:
-            was_removed = PictureHandler.__screen_rectangle_tree.remove_outer_rectangle(rect)
+            was_removed = PictureHandler.__screen_rectangle_tree.remove_rectangle(rect)
             if was_removed:
                 PictureHandler.__screen_rectangles_to_add.append(rect)
         #Done!
@@ -334,7 +334,7 @@ class PictureHandler(object):
             (_,_,_,_,(x,y)) = rect
             coords.append((x,y))
             #Now fill the rectangle tree again
-            PictureHandler.__screen_rectangle_tree.insert_outer_rectangle(rect)
+            PictureHandler.__screen_rectangle_tree.insert_rectangle(rect)
         #Empty the update list
         #TODO REMOVE print("Filling coords " + str(coords))
         PictureHandler.__screen_rectangles_to_add = []
@@ -362,7 +362,7 @@ class PictureHandler(object):
         '''
         (x_min,y_min,x_max,y_max) = rect
         #Now work out everyone who needs to redraw...
-        collided_rectangles = PictureHandler.__picture_rectangle_tree.collide_outer_rectangle((x_min,y_min,x_max,y_max))
+        collided_rectangles = PictureHandler.__picture_rectangle_tree.collide_rectangle((x_min,y_min,x_max,y_max))
         #Gather them up, and order them by depth
         collided_list = []
         #TODO REMOVE print("Got collided rectangles " + str(collided_rectangles))
@@ -422,7 +422,7 @@ class PictureHandler(object):
         '''
         #Remove from the tree
         (x_min,y_min,x_max,y_max) = drawer.get_bounding_rectangle()
-        PictureHandler.__picture_rectangle_tree.remove_outer_rectangle((x_min,y_min,x_max,y_max,drawer))
+        PictureHandler.__picture_rectangle_tree.remove_rectangle((x_min,y_min,x_max,y_max,drawer))
         #Update the screen...
         PictureHandler.__add_to_screen(drawer)
     
@@ -452,7 +452,7 @@ class PictureHandler(object):
         '''
         PictureHandler.__add_to_screen(drawer)
         #Add to the picture handler's screen
-        PictureHandler.__picture_rectangle_tree.insert_outer_rectangle((x_min,y_min,x_max,y_max,drawer))
+        PictureHandler.__picture_rectangle_tree.insert_rectangle((x_min,y_min,x_max,y_max,drawer))
         #That should be everything..?
         PictureHandler.__picture_lock.release()
     

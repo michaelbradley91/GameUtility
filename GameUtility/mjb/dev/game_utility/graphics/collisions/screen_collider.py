@@ -35,7 +35,7 @@ class ScreenCollider(object):
         self.__get_inner_collider = get_inner_collider
         self.__rectangle_collider = rectangle_collider
         
-    def insert_outer_rectangle(self, rect):
+    def insert_rectangle(self, rect):
         '''
         Insert a rectangle into the collider.
         @param rect: the rectangle to insert, which should have the form (x_min,y_min,x_max,y_max,key)
@@ -43,7 +43,7 @@ class ScreenCollider(object):
         '''
         self.__rectangle_collider.insert_rectangle(rect)
     
-    def remove_outer_rectangle(self, rect):
+    def remove_rectangle(self, rect):
         '''
         Remove a rectangle from the collider. Note that the key must also be equal
         to the key of the rectangle you wish to remove.
@@ -53,7 +53,7 @@ class ScreenCollider(object):
         '''
         return self.__rectangle_collider.remove_rectangle(rect)
     
-    def collide_outer_rectangle(self, outer_rectangle, inner_rectangles=[], inner_collider=None):
+    def collide_rectangle(self, outer_rectangle, inner_rectangles=[], inner_collider=None):
         '''
         Collide a rectangle tree with the collider
         @param outer_rectangle: the rectangle to collide against in the form of (x_min,y_min,x_max,y_max)
