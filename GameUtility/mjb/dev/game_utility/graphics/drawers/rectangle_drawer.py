@@ -137,7 +137,9 @@ class RectangleDrawer(picture_handler.Drawer):
         @return: a rectangle in the form of (x_min,y_min,x_max,y_max) covering the whole
         area that the drawer might draw in. This should not change.
         '''
-        return self.__rect
+        return (self.__rect[0],self.__rect[1],
+                self.__rect[0]+self.__rect[2],
+                self.__rect[1]+self.__rect[3])
     
     def get_inner_rectangles(self):
         '''

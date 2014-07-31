@@ -306,6 +306,7 @@ class PictureHandler(object):
         rect = drawer.get_bounding_rectangle()
         #Add the rectangle to the screen rectangle tree by colliding it first
         #TODO REMOVE print("Adding rectangle " + str(rect))
+        #TODO REMOVE print("Got inner rectangles as " + str(drawer.get_inner_rectangles()) + " and inner collider " + str(drawer.get_inner_collider()))
         collided_rects = PictureHandler.__screen_rectangle_tree.collide_rectangle(
             rect,drawer.get_inner_rectangles(),drawer.get_inner_collider())
         #TODO REMOVE print("Got collided rectangles " + str(collided_rects))

@@ -66,16 +66,16 @@ class DummyKeyListener(key_listeners.KeyboardListener,frame_listeners.FrameListe
     def frame_passed(self):
         if self.key_LEFT:
             #Move the rectangle
-            self.rectangle.move_rectangle(x_move=-1)
+            self.rectangle.move_rectangle(x_move=-2)
         if self.key_RIGHT:
             #Move the rectangle
-            self.rectangle.move_rectangle(x_move=1)
+            self.rectangle.move_rectangle(x_move=2)
         if self.key_UP:
             #Move the rectangle
-            self.rectangle.move_rectangle(y_move=-1)
+            self.rectangle.move_rectangle(y_move=-2)
         if self.key_DOWN:
             #Move the rectangle
-            self.rectangle.move_rectangle(y_move=1)
+            self.rectangle.move_rectangle(y_move=2)
         
 class DummyMouseButtonListener(mouse_button_listeners.MouseButtonListener):
     
@@ -145,7 +145,7 @@ def run():
     '''
     '''Initialise the picture handler!'''
     
-    screen.Screen.initialise("My game",(100,100,100))
+    screen.Screen.initialise("My game",(100,100,100),max_frame_rate=60)
     picture_handler.PictureHandler.initialise()
     #Create a keyboard listener...
     

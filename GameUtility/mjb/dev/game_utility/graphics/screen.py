@@ -49,7 +49,7 @@ class Screen(object):
     __created_screen = False
     #Again, the game loop can't be started more than once.
     __started_game_loop = False
-    #Remember the various parameters... these are the defaults
+    #Remember the various parameters...
     _background_colour = (255,255,255)
     __max_frame_rate = 60
     __game_caption = ""
@@ -194,9 +194,16 @@ class Screen(object):
         Screen.__started_game_loop = True
         Screen._lock.release()
         try :
+            #TODO REMOVE
+            #total = 0
             #Main game while loop
             while True:
                 Screen.__clock.tick(Screen.__max_frame_rate)
+                #TODO REMOVE For monitoring the frame rate
+                #total+=1
+                #if total==60:
+                #    total=0
+                #    print(Screen.__clock.get_fps())
                 #Remember if we registered a mouse motion event already...
                 heard_mouse_motion = False
                 #Handle Input Events
@@ -266,6 +273,8 @@ class Screen(object):
         '''
         try:
             Screen._lock.acquire()
+            #TODO REMOVE
+            #pygame.display.update()
             pygame.display.update(Screen.__update_list)
             Screen.__update_list = []
             #Register and deregister listeners...
