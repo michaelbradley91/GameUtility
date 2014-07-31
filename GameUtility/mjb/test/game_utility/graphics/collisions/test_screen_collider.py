@@ -22,9 +22,6 @@ class TestScreenCollider(unittest.TestCase):
     def test_add_remove(self):
         '''
         Test the add and remove methods of a rectangle collider.
-        @param test_case: the test case that is being run.
-        @param make_rect_collider: a method to construct the rectangle collider. This should
-        expect a size parameter.
         '''
         for x in range(0,len(TestScreenCollider.rect_make_list)):
             #Firstly, try adding various "simpler" rectangles...
@@ -50,9 +47,6 @@ class TestScreenCollider(unittest.TestCase):
     def test_clear(self):
         '''
         Test the clear method of a rectangle collider.
-        @param test_case: the test case that is being run.
-        @param make_rect_collider: a method to construct the rectangle collider. This should
-        expect a size parameter.
         '''
         for x in range(0,len(TestScreenCollider.rect_make_list)):
             rect_collider = ScreenCollider(TestScreenCollider.rect_make_list[x]((450,200)),lambda _:[],lambda _:None)
@@ -73,9 +67,6 @@ class TestScreenCollider(unittest.TestCase):
     def test_clipping(self):
         '''
         Test the clipping by the rectangle collider.
-        @param test_case: the test case that is being run.
-        @param make_rect_collider: a method to construct the rectangle collider. This should
-        expect a size parameter.
         '''
         for x in range(0,len(TestScreenCollider.rect_make_list)):
             rect_collider = ScreenCollider(TestScreenCollider.rect_make_list[x]((50,50)),lambda _:[],lambda _:None)
@@ -98,9 +89,6 @@ class TestScreenCollider(unittest.TestCase):
         '''
         Test the collision calculations by the rectangle collider. This is the really
         important stuff!
-        @param test_case: the test case that is being run.
-        @param make_rect_collider: a method to construct the rectangle collider. This should
-        expect a size parameter.
         '''
         size = (50,50)
         (width,height) = size
@@ -174,7 +162,78 @@ class TestScreenCollider(unittest.TestCase):
             if x_max>r_x_min and x_min<r_x_max and y_max>r_y_min and y_min<r_y_max:
                 res.append((r_x_min,r_y_min,r_x_max,r_y_max,_))
         return res
+    
+    @staticmethod
+    def default_get_rect_list((a,b,c,d,(rect_list,e))):
+        #Get the rectangle list from the keyed rectangle
+        return rect_list
+    
+    @staticmethod
+    def default_get_rect_collider((a,b,c,d,(e,rect_collider))):
+        #Get the rectangle collider from the keyed rectangle
+        return rect_collider
 
+    def test_precise_collision(self):
+        '''
+        Test collisions using the inner rectangle colliders
+        '''
+        #This method checks a few cases where the initial collision does not
+        #necessarily indicate a genuine collision when examined in detail.
+        
+        rect_collider = ScreenCollider(SimpleRectangleCollider((100,100))
+                                       ,TestScreenCollider.default_get_rect_list,
+                                       TestScreenCollider.default_get_rect_collider)
+        #Now add some c shaped rectangles...
+        inner_collider = SimpleRectangleCollider((30,30))
+        '''
+             ##########
+             ##########
+                  #####
+                  #####
+             ##########
+             ##########
+        '''
+        inner_rectangle_list = [(10,0,30,10),
+                                (20,10,30,20),
+                                (10,20,30,30)]
+        for (x_min,y_min,x_max,y_max) in inner_rectangle_list:
+            inner_collider.insert_rectangle((x_min,y_min,x_max,y_max,None))
+        #The outer rectangle entered (30*30)
+        outer_rectangle = (50,50,80,80,(inner_rectangle_list,inner_collider))
+        #Remember this
+        original_outer_rectangle = outer_rectangle
+        #Add the the rect collider...
+        rect_collider.insert_rectangle(outer_rectangle)
+        
+        #Now construct a slot to "not fit"
+        '''
+        #####
+        #####
+        ###############
+        ###############
+        #####
+        #####
+        '''
+        inner_collider = SimpleRectangleCollider((30,30))
+        inner_rectangle_list = [(0,0,10,10),
+                                (0,10,30,20),
+                                (0,20,10,30)]
+        for (x_min,y_min,x_max,y_max) in inner_rectangle_list:
+            inner_collider.insert_rectangle((x_min,y_min,x_max,y_max,None))
+        outer_rectangle = (40,50,70,80)
+        #Now collide!
+        self.assertFalse(rect_collider.is_colliding(outer_rectangle, inner_rectangle_list, inner_collider))
+        self.assertTrue(rect_collider.collide_rectangle(outer_rectangle, inner_rectangle_list, inner_collider)==[])
+        #Now move it slightly, and check the collision is made...
+        outer_rectangle = (41,50,71,80)
+        self.assertTrue(rect_collider.is_colliding(outer_rectangle, inner_rectangle_list, inner_collider))
+        self.assertTrue(rect_collider.collide_rectangle(outer_rectangle, inner_rectangle_list, inner_collider)==[original_outer_rectangle])
+        #And again...
+        outer_rectangle = (40,51,70,81)
+        self.assertTrue(rect_collider.is_colliding(outer_rectangle, inner_rectangle_list, inner_collider))
+        self.assertTrue(rect_collider.collide_rectangle(outer_rectangle, inner_rectangle_list, inner_collider)==[original_outer_rectangle])
+        #Good enough
+        
     
 def suite():
     '''
