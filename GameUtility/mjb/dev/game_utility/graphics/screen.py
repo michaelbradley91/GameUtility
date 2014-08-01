@@ -198,7 +198,6 @@ class Screen(object):
             #total = 0
             #Main game while loop
             while True:
-                Screen.__clock.tick(Screen.__max_frame_rate)
                 #TODO REMOVE For monitoring the frame rate
                 #total+=1
                 #if total==60:
@@ -275,6 +274,8 @@ class Screen(object):
             Screen._lock.acquire()
             #TODO REMOVE
             #pygame.display.update()
+            #Tick by the update to uniform the time out
+            Screen.__clock.tick(Screen.__max_frame_rate)
             pygame.display.update(Screen.__update_list)
             Screen.__update_list = []
             #Register and deregister listeners...

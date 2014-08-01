@@ -66,16 +66,16 @@ class DummyKeyListener(key_listeners.KeyboardListener,frame_listeners.FrameListe
     def frame_passed(self):
         if self.key_LEFT:
             #Move the rectangle
-            self.rectangle.move_rectangle(x_move=-2)
+            self.rectangle.move_rectangle(x_move=-1)
         if self.key_RIGHT:
             #Move the rectangle
-            self.rectangle.move_rectangle(x_move=2)
+            self.rectangle.move_rectangle(x_move=1)
         if self.key_UP:
             #Move the rectangle
-            self.rectangle.move_rectangle(y_move=-2)
+            self.rectangle.move_rectangle(y_move=-1)
         if self.key_DOWN:
             #Move the rectangle
-            self.rectangle.move_rectangle(y_move=2)
+            self.rectangle.move_rectangle(y_move=1)
         
 class DummyMouseButtonListener(mouse_button_listeners.MouseButtonListener):
     
