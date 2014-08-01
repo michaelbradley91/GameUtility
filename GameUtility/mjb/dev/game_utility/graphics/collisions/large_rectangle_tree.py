@@ -4,7 +4,6 @@ Created on 5 Jul 2014
 @author: michael
 '''
 
-import collections
 import mjb.dev.game_utility.graphics.collisions.rectangle_collider as collider
 
 class LargeRectangleTree(collider.RectangleCollider):
@@ -280,25 +279,25 @@ class LargeRectangleTree(collider.RectangleCollider):
         We store them in a default dictionary, which is close to an array
         '''
         #Divide by the width
-        width_dividers = collections.defaultdict(lambda:0)
+        width_dividers = []
         width_division = self.__width / 16
         for i in range(0,16):
-            width_dividers[i] = i * width_division
+            width_dividers.append(i * width_division)
         for i in range(0,self.__width % 16): #the remainder
             width_dividers[15-i] = width_dividers[15-i] + (self.__width % 16) - i
         #Repeat for the height
-        height_dividers = collections.defaultdict(lambda:0)
+        height_dividers = []
         height_division = self.__height / 16
         for i in range(0,16):
-            height_dividers[i] = i * height_division
+            height_dividers.append(i * height_division)
         for i in range(0,self.__height % 16): #the remainder
             height_dividers[15-i] = height_dividers[15-i] + (self.__height % 16) - i
         #For convenience:
-        width_dividers[16] = self.__width+1 #plus one because we consider being >= to be in the sector
-        height_dividers[16] = self.__height+1
+        width_dividers.append(self.__width+1) #plus one because we consider being >= to be in the sector
+        height_dividers.append(self.__height+1)
         #This is memory intensive, but simplifies the coordinate calculation...
-        self.__width_coordinate = collections.defaultdict(lambda:-1)
-        self.__height_coordinate = collections.defaultdict(lambda:-1)
+        self.__width_coordinate = []
+        self.__height_coordinate = []
         #Fill the "arrays"
         #For the width first...
         current_coord = 0
@@ -306,29 +305,29 @@ class LargeRectangleTree(collider.RectangleCollider):
             if i>=width_dividers[current_coord+1]:
                 #Coordinate changes
                 current_coord+=1
-            self.__width_coordinate[i] = current_coord
+            self.__width_coordinate.append(current_coord)
         #For the height
         current_coord = 0
         for i in range(0,self.__height+1):
             if i>=height_dividers[current_coord+1]:
                 #Coordinate changes
                 current_coord+=1
-            self.__height_coordinate[i] = current_coord
+            self.__height_coordinate.append(current_coord)
             
     
     def __initialise_coordinate_map(self):
         '''
         This function initialises the coordinate map so that coordinates can be returned quickly
         '''
-        self.__coordinate_map = collections.defaultdict(lambda:None)
-        self.__coordinate_map[0] = lambda rect: self.__width_coordinate[rect[0]]/4
-        self.__coordinate_map[1] = lambda rect: self.__width_coordinate[rect[2]]/4
-        self.__coordinate_map[2] = lambda rect: self.__height_coordinate[rect[1]]/4
-        self.__coordinate_map[3] = lambda rect: self.__height_coordinate[rect[3]]/4
-        self.__coordinate_map[4] = lambda rect: self.__width_coordinate[rect[0]]%4
-        self.__coordinate_map[5] = lambda rect: self.__width_coordinate[rect[2]]%4
-        self.__coordinate_map[6] = lambda rect: self.__height_coordinate[rect[1]]%4
-        self.__coordinate_map[7] = lambda rect: self.__height_coordinate[rect[3]]%4
+        self.__coordinate_map = []
+        self.__coordinate_map.append(lambda rect: self.__width_coordinate[rect[0]]/4)
+        self.__coordinate_map.append(lambda rect: self.__width_coordinate[rect[2]]/4)
+        self.__coordinate_map.append(lambda rect: self.__height_coordinate[rect[1]]/4)
+        self.__coordinate_map.append(lambda rect: self.__height_coordinate[rect[3]]/4)
+        self.__coordinate_map.append(lambda rect: self.__width_coordinate[rect[0]]%4)
+        self.__coordinate_map.append(lambda rect: self.__width_coordinate[rect[2]]%4)
+        self.__coordinate_map.append(lambda rect: self.__height_coordinate[rect[1]]%4)
+        self.__coordinate_map.append(lambda rect: self.__height_coordinate[rect[3]]%4)
     
     def __get_coordinate(self, rect, dim):
         '''

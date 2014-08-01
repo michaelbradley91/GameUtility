@@ -49,7 +49,6 @@ I care...
 from mjb.dev.game_utility.graphics.screen import _PictureHandler, Screen
 import pygame
 import threading
-import collections
 from mjb.dev.game_utility.graphics.collisions.large_rectangle_tree import LargeRectangleTree
 from mjb.dev.game_utility.graphics.collisions.small_rectangle_tree import SmallRectangleTree
 from mjb.dev.game_utility.graphics.utility.rectangle_filler import RectangleFiller
@@ -183,10 +182,10 @@ class PictureHandler(object):
     __SCREEN_RECTANGLES = []
     
     #Storing the conversion back to the screen coordinates
-    __MIN_X_COORD_SCREEN_CONVERSION = collections.defaultdict(lambda:0)
-    __MAX_X_COORD_SCREEN_CONVERSION = collections.defaultdict(lambda:0)
-    __MIN_Y_COORD_SCREEN_CONVERSION = collections.defaultdict(lambda:0)
-    __MAX_Y_COORD_SCREEN_CONVERSION = collections.defaultdict(lambda:0)
+    __MIN_X_COORD_SCREEN_CONVERSION = []
+    __MAX_X_COORD_SCREEN_CONVERSION = []
+    __MIN_Y_COORD_SCREEN_CONVERSION = []
+    __MAX_Y_COORD_SCREEN_CONVERSION = []
     
     #The screen rectangle tree (divides the screen up into a grid)
     __screen_rectangle_tree = None
@@ -231,22 +230,22 @@ class PictureHandler(object):
         height_div = PictureHandler.__HEIGHT_DIVISION
         #Now fill the arrays...
         #Divide by the width
-        width_dividers = collections.defaultdict(lambda:0)
+        width_dividers = []
         width_division = screen_width / width_div
         for i in range(0,width_div):
-            width_dividers[i] = i * width_division
+            width_dividers.append(i * width_division)
         for i in range(0,screen_width % width_div): #the remainder
             width_dividers[width_div-(1+i)] = width_dividers[width_div-(1+i)] + (screen_width % width_div) - i
         #Repeat for the height
-        height_dividers = collections.defaultdict(lambda:0)
+        height_dividers = []
         height_division = screen_height / height_div
         for i in range(0,height_div):
-            height_dividers[i] = i * height_division
+            height_dividers.append(i * height_division)
         for i in range(0,screen_height % height_div): #the remainder
             height_dividers[height_div-(i+1)] = height_dividers[height_div-(i+1)] + (screen_height % height_div) - i
         #For convenience:
-        width_dividers[width_div] = screen_width #plus one because we consider being >= to be in the sector
-        height_dividers[height_div] = screen_height
+        width_dividers.append(screen_width) #plus one because we consider being >= to be in the sector
+        height_dividers.append(screen_height)
         #Now calculate the rectangles...
         for x in range(0,width_div):
             for y in range(0,height_div):
@@ -262,11 +261,11 @@ class PictureHandler(object):
         #We will receive the rectangle coordinates, and would like to know where they fit
         #in the grid. We store this for speed
         for x in range(0,width_div):
-            PictureHandler.__MIN_X_COORD_SCREEN_CONVERSION[x] = width_dividers[x]
-            PictureHandler.__MAX_X_COORD_SCREEN_CONVERSION[x] = width_dividers[x+1]
+            PictureHandler.__MIN_X_COORD_SCREEN_CONVERSION.append(width_dividers[x])
+            PictureHandler.__MAX_X_COORD_SCREEN_CONVERSION.append(width_dividers[x+1])
         for y in range(0,height_div):
-            PictureHandler.__MIN_Y_COORD_SCREEN_CONVERSION[y] = height_dividers[y]
-            PictureHandler.__MAX_Y_COORD_SCREEN_CONVERSION[y] = height_dividers[y+1]
+            PictureHandler.__MIN_Y_COORD_SCREEN_CONVERSION.append(height_dividers[y])
+            PictureHandler.__MAX_Y_COORD_SCREEN_CONVERSION.append(height_dividers[y+1])
         #Fill the tree
         PictureHandler.__screen_rectangles_to_add = PictureHandler.__SCREEN_RECTANGLES
         PictureHandler.__screen_rectangle_tree = ScreenCollider(
