@@ -49,10 +49,10 @@ I care...
 from mjb.dev.game_utility.graphics.screen import _PictureHandler, Screen
 import pygame
 import threading
-from mjb.dev.game_utility.graphics.collisions.large_rectangle_tree import LargeRectangleTree
-from mjb.dev.game_utility.graphics.collisions.small_rectangle_tree import SmallRectangleTree
-from mjb.dev.game_utility.graphics.utility.rectangle_filler import RectangleFiller
-from mjb.dev.game_utility.graphics.collisions.screen_collider import ScreenCollider
+from mjb.dev.game_utility.collisions.large_rectangle_tree import LargeRectangleTree
+from mjb.dev.game_utility.collisions.small_rectangle_tree import SmallRectangleTree
+from mjb.dev.game_utility.utility.rectangle_filler import RectangleFiller
+from mjb.dev.game_utility.collisions.screen_collider import ScreenCollider
 
 class Drawer(object):
     '''

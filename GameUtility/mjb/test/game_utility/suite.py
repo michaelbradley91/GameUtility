@@ -6,6 +6,8 @@ Created on 28 Jul 2014
 import unittest
 import mjb.test.game_utility.graphics.suite as graphics_suite
 import mjb.test.game_utility.input_listeners.suite as input_listeners_suite
+import mjb.test.game_utility.collisions.suite as collisions_suite
+import mjb.test.game_utility.utility.suite as utility_suite
 
 def suite():
     '''
@@ -14,7 +16,9 @@ def suite():
     test_suite = unittest.TestSuite(
         #Add all of the suites here:
         [graphics_suite.suite(),
-         input_listeners_suite.suite()
+         input_listeners_suite.suite(),
+         collisions_suite.suite(),
+         utility_suite.suite()
         ])
     return test_suite
 

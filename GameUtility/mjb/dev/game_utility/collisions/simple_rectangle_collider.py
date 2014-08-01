@@ -4,7 +4,7 @@ Created on 25 Jul 2014
 @author: michael
 '''
 
-import mjb.dev.game_utility.graphics.collisions.rectangle_collider as collider
+import mjb.dev.game_utility.collisions.rectangle_collider as collider
 
 class SimpleRectangleCollider(collider.RectangleCollider):
     '''

@@ -6,7 +6,7 @@ Created on 12 May 2014
 
 import os
 import pygame.transform
-import mjb.dev.game_utility.graphics.utility.rectangle_filler as rectangle_filler
+import mjb.dev.game_utility.utility.rectangle_filler as rectangle_filler
 
 class Image(object):
     '''

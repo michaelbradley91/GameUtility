@@ -4,8 +4,8 @@ Created on 28 Jul 2014
 @author: michael
 '''
 import unittest
-import mjb.test.game_utility.graphics.collisions.test_rectangle_collider as test_rectangle_collider
-from mjb.dev.game_utility.graphics.collisions.simple_rectangle_collider import SimpleRectangleCollider 
+import mjb.test.game_utility.collisions.test_rectangle_collider as test_rectangle_collider
+from mjb.dev.game_utility.collisions.simple_rectangle_collider import SimpleRectangleCollider 
 
 class TestSimpleRectangleCollider(unittest.TestCase):
     '''

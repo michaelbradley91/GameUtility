@@ -1,12 +1,12 @@
 '''
-Created on 5 Jul 2014
+Created on 25 Jul 2014
 
 @author: michael
 '''
 
-import mjb.dev.game_utility.graphics.collisions.rectangle_collider as collider
+import mjb.dev.game_utility.collisions.rectangle_collider as collider
 
-class LargeRectangleTree(collider.RectangleCollider):
+class SmallRectangleTree(collider.RectangleCollider):
     '''
     The rectangle tree is designed to store rectangles, and check for intersections between the stored
     rectangle and another rectangle as efficiently as possible. It is specifically designed for fixed
@@ -17,41 +17,44 @@ class LargeRectangleTree(collider.RectangleCollider):
     
     where the key is arbitrary and for the user only.
     
-    This rectangle tree is specifically large, meaning it is designed for a large screen
-    potentially taking on many many rectangles.
+    This rectangle tree is specifically small, meaning it is faster than the large rectangle
+    tree if only a few rectangles are likely to be added, or if the screen size is small.
     
     You should usually use the small rectangle tree to avoid both memory and time
     overheads.
-    
-    TODO: discovered lists are arrays... should really remove the default dicts now.
     '''
+    
+    ###################################################################
+    # There's a lot of code duplication between the two trees. Sorry! #
+    # Might want to fix this, but that could slow it down...          #
+    ###################################################################
     
     '''
     The minimum width of the screen that this tree supports
     '''
-    MIN_WIDTH = 16
+    MIN_WIDTH = 4
     '''
     The minimum height of the screen that this tree supports
     '''
-    MIN_HEIGHT = 16
+    MIN_HEIGHT = 4
 
     def __init__(self, size):
         '''
         Construct a new rectangle tree, designed to cover coordinates ranging from (0,0) to (x,y) for
         (x,y) = size.
         @param size: the size of the space spanned by the rectangle tree
-        @raise ValueError: if the screen size is not at least 16 pixels wide and tall.
+        @raise ValueError: if the screen size is not at least 4 pixels wide and tall.
         '''
         (width,height) = size
         self.__width = width
         self.__height = height
-        if self.__width<LargeRectangleTree.MIN_WIDTH or self.__height<LargeRectangleTree.MIN_HEIGHT:
+        if self.__width<SmallRectangleTree.MIN_WIDTH or self.__height<SmallRectangleTree.MIN_HEIGHT:
             raise ValueError("Large rectangle tree cannot be applied to a screen less than " +
-                             LargeRectangleTree.MIN_HEIGHT + " pixels tall or " + LargeRectangleTree.MIN_WIDTH +
+                             SmallRectangleTree.MIN_HEIGHT + " pixels tall or " + SmallRectangleTree.MIN_WIDTH +
                              " pixels wide.")
-        #Initialise the coordinate map...
-        self.__divide_screen()
-        self.__initialise_coordinate_map()
+        #Remember the dividing lines of the grid:
+        self.__width_divider = self.__width / 4
+        self.__height_divider = self.__height / 4
         #Initialise the tree!
         self.__root = [0,[],[],[],[]]
         
@@ -71,7 +74,7 @@ class LargeRectangleTree(collider.RectangleCollider):
         rect = self.__convert_rect(rect)
         #Recur to insert the rectangle
         current_node = self.__root
-        for dim in range(0,7):
+        for dim in range(0,3):
             coord = self.__get_coordinate(rect, dim)+1
             #Construct the node if necessary
             if current_node[coord]==[]:
@@ -79,7 +82,7 @@ class LargeRectangleTree(collider.RectangleCollider):
                 current_node[coord] = [0,[],[],[],[]]
             current_node = current_node[coord]
         #Final one...
-        coord = self.__get_coordinate(rect, 7)+1
+        coord = self.__get_coordinate(rect, 3)+1
         if current_node[coord]==[]:
             current_node[0]+=1
         #This final list should just have the rectangle added to it, I think...
@@ -101,14 +104,14 @@ class LargeRectangleTree(collider.RectangleCollider):
         #We need to hold the node stack too...
         current_node = self.__root
         node_stack = [current_node]
-        for dim in range(0,7):
+        for dim in range(0,3):
             coord = self.__get_coordinate(rect, dim)+1
             #Construct the node if necessary
             if current_node[coord]==[]:
                 return False #does not exist
             current_node = current_node[coord]
             node_stack.append(current_node)
-        coord = self.__get_coordinate(rect, 7)+1
+        coord = self.__get_coordinate(rect, 3)+1
         if current_node[coord]==[]:
             return False #does not exist
         #Remove the rectangle...
@@ -117,7 +120,7 @@ class LargeRectangleTree(collider.RectangleCollider):
             current_node[coord].remove(rect)
         #Now we need to correct for the removal...
         removing = current_node[coord]==[]
-        dim = 6 #where we are in the node stack
+        dim = 2 #where we are in the node stack
         while removing and dim>=0:
             #Remove from the current node...
             current_node[0]-=1
@@ -160,7 +163,7 @@ class LargeRectangleTree(collider.RectangleCollider):
         if current_node==[]:
             return res
         #Special case if this is the last dim...
-        if dim==8:
+        if dim==4:
             #This is a list of rectangles!
             for (rect_x_min, rect_y_min, rect_x_max, rect_y_max,
                  (rect_org_x_min,rect_org_y_min,rect_org_x_max,rect_org_y_max,key)) in current_node:
@@ -174,29 +177,18 @@ class LargeRectangleTree(collider.RectangleCollider):
             #This is a min coordinate. We need all rectangles whose min coordinate is less than our max.
             #Thus we look in our quadrant, and unconditionally in quadrants less than it
             res = self.__collide_rectangle(coord_rect,current_node[coord],dim+1)
-            #Add the other results
-            if dim%4==0:
-                new_rect = (self.__width, y_max, x_min, y_min)
-            else:
-                new_rect = (x_max, self.__height, x_min, y_min)
             #We change the coordinates so that we intersect against all the other rectangles
             for min_coord in range(1,coord):
-                res.extend(self.__collide_rectangle(new_rect, current_node[min_coord], dim+1))
+                res.extend(self.__collide_rectangle(coord_rect, current_node[min_coord], dim+1))
             return res
         else:
             #This is a max coordinate, so we need rectangles whose max coordinate is any greater than our min.
             res = self.__collide_rectangle(coord_rect, current_node[coord], dim+1)
             #Add the other results
-            if dim%4==1:
-                new_rect = (x_max, y_max, 0, y_min)
-            else:
-                new_rect = (x_max, y_max, x_min, 0)
             #Intersect in the other quadrants
             for max_coord in range(coord+1,5):
-                res.extend(self.__collide_rectangle(new_rect, current_node[max_coord], dim+1))
+                res.extend(self.__collide_rectangle(coord_rect, current_node[max_coord], dim+1))
             return res
-    
-    #SO MUCH CODE DUPLICATION!! SORRY!!
     
     def is_colliding(self, rect):
         '''
@@ -225,7 +217,7 @@ class LargeRectangleTree(collider.RectangleCollider):
         if current_node==[]:
             return False
         #Special case if this is the last dim...
-        if dim==8:
+        if dim==4:
             #This is a list of rectangles!
             for (rect_x_min, rect_y_min, rect_x_max, rect_y_max,_) in current_node:
                 if rect_x_min<x_max and rect_x_max>x_min and rect_y_min<y_max and rect_y_max>y_min:
@@ -272,70 +264,23 @@ class LargeRectangleTree(collider.RectangleCollider):
         '''
         (x_min, y_min, x_max, y_max, _) = rect
         return x_max>0 and y_max>0 and x_min<self.__width and y_min<self.__height and x_max!=x_min and y_max!=y_min
-        
-    def __divide_screen(self):
-        '''
-        The purpose of this method is to divide the screen up according to the 16 positions.
-        We store them in a default dictionary, which is close to an array
-        '''
-        #Divide by the width
-        width_dividers = []
-        width_division = self.__width / 16
-        for i in range(0,16):
-            width_dividers.append(i * width_division)
-        for i in range(0,self.__width % 16): #the remainder
-            width_dividers[15-i] = width_dividers[15-i] + (self.__width % 16) - i
-        #Repeat for the height
-        height_dividers = []
-        height_division = self.__height / 16
-        for i in range(0,16):
-            height_dividers.append(i * height_division)
-        for i in range(0,self.__height % 16): #the remainder
-            height_dividers[15-i] = height_dividers[15-i] + (self.__height % 16) - i
-        #For convenience:
-        width_dividers.append(self.__width+1) #plus one because we consider being >= to be in the sector
-        height_dividers.append(self.__height+1)
-        #This is memory intensive, but simplifies the coordinate calculation...
-        self.__width_coordinate = []
-        self.__height_coordinate = []
-        #Fill the "arrays"
-        #For the width first...
-        current_coord = 0
-        for i in range(0,self.__width+1):
-            if i>=width_dividers[current_coord+1]:
-                #Coordinate changes
-                current_coord+=1
-            self.__width_coordinate.append(current_coord)
-        #For the height
-        current_coord = 0
-        for i in range(0,self.__height+1):
-            if i>=height_dividers[current_coord+1]:
-                #Coordinate changes
-                current_coord+=1
-            self.__height_coordinate.append(current_coord)
-            
-    
-    def __initialise_coordinate_map(self):
-        '''
-        This function initialises the coordinate map so that coordinates can be returned quickly
-        '''
-        self.__coordinate_map = []
-        self.__coordinate_map.append(lambda rect: self.__width_coordinate[rect[0]]/4)
-        self.__coordinate_map.append(lambda rect: self.__width_coordinate[rect[2]]/4)
-        self.__coordinate_map.append(lambda rect: self.__height_coordinate[rect[1]]/4)
-        self.__coordinate_map.append(lambda rect: self.__height_coordinate[rect[3]]/4)
-        self.__coordinate_map.append(lambda rect: self.__width_coordinate[rect[0]]%4)
-        self.__coordinate_map.append(lambda rect: self.__width_coordinate[rect[2]]%4)
-        self.__coordinate_map.append(lambda rect: self.__height_coordinate[rect[1]]%4)
-        self.__coordinate_map.append(lambda rect: self.__height_coordinate[rect[3]]%4)
     
     def __get_coordinate(self, rect, dim):
         '''
-        @param rect: the rectangle whose coordinates in the 8 dimensional array you would like
+        @param rect: the rectangle whose coordinates in the 4 dimensional array you would like
         @param dim: the level of recursion in the array for the index you would like (0 being the first)
         @return: the relevant coordinate
         '''
-        return self.__coordinate_map[dim](rect)
+        if dim==0 or dim==3:
+            val = rect[dim]
+        else:
+            val = rect[3-dim]
+        if dim<=1:
+            #x coordinate!
+            return min(3,val / self.__width_divider)
+        else:
+            #y coordinate!
+            return min(3,val / self.__height_divider)
         
     def __convert_rect(self, rect):
         '''

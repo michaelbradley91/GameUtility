@@ -4,10 +4,10 @@ Created on 28 Jul 2014
 @author: michael
 '''
 import unittest
-import mjb.test.game_utility.graphics.collisions.test_simple_rectangle_collider as test_simple_rectangle_collider
-import mjb.test.game_utility.graphics.collisions.test_small_rectangle_tree as test_small_rectangle_tree
-import mjb.test.game_utility.graphics.collisions.test_large_rectangle_tree as test_large_rectangle_tree
-import mjb.test.game_utility.graphics.collisions.test_screen_collider as test_screen_collider
+import mjb.test.game_utility.collisions.test_simple_rectangle_collider as test_simple_rectangle_collider
+import mjb.test.game_utility.collisions.test_small_rectangle_tree as test_small_rectangle_tree
+import mjb.test.game_utility.collisions.test_large_rectangle_tree as test_large_rectangle_tree
+import mjb.test.game_utility.collisions.test_screen_collider as test_screen_collider
 
 def suite():
     '''

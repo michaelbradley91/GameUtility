@@ -4,9 +4,9 @@ Created on 25 Jul 2014
 @author: michael
 '''
 
-import mjb.dev.game_utility.graphics.collisions.large_rectangle_tree as large_rectangle_tree
-import mjb.dev.game_utility.graphics.collisions.small_rectangle_tree as small_rectangle_tree
-import mjb.dev.game_utility.graphics.collisions.simple_rectangle_collider as simple_rectangle_collider
+import mjb.dev.game_utility.collisions.large_rectangle_tree as large_rectangle_tree
+import mjb.dev.game_utility.collisions.small_rectangle_tree as small_rectangle_tree
+import mjb.dev.game_utility.collisions.simple_rectangle_collider as simple_rectangle_collider
 
 class RectangleColliderPicker(object):
     '''
@@ -25,12 +25,13 @@ class RectangleColliderPicker(object):
     '''
 
     @staticmethod
-    def get_recommended_collider(self,size,number_of_rectangles):
+    def get_recommended_collider(size,number_of_rectangles):
         '''
         Return the collider most suitable to handle the given size of screen
         and the (estimated) number of rectangles to be added
         @param size: the size of the screen for the collider to work with
         @param number_of_rectangles: the estimated number of rectangles to be added to this screen
+        @return: a suitable collider set to the correct size but otherwise empty
         '''
         #Check the size...
         (width,height) = size

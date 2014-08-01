@@ -4,10 +4,10 @@ Created on 30 Jul 2014
 @author: michael
 '''
 import unittest
-from mjb.dev.game_utility.graphics.collisions.screen_collider import ScreenCollider
-from mjb.dev.game_utility.graphics.collisions.simple_rectangle_collider import SimpleRectangleCollider
-from mjb.dev.game_utility.graphics.collisions.small_rectangle_tree import SmallRectangleTree
-from mjb.dev.game_utility.graphics.collisions.large_rectangle_tree import LargeRectangleTree
+from mjb.dev.game_utility.collisions.screen_collider import ScreenCollider
+from mjb.dev.game_utility.collisions.simple_rectangle_collider import SimpleRectangleCollider
+from mjb.dev.game_utility.collisions.small_rectangle_tree import SmallRectangleTree
+from mjb.dev.game_utility.collisions.large_rectangle_tree import LargeRectangleTree
 
 
 class TestScreenCollider(unittest.TestCase):
