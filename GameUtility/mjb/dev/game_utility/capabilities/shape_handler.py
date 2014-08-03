@@ -4,94 +4,148 @@ Created on 1 Aug 2014
 @author: michael
 '''
 
-import collections
 import threading
 
 class ShapeHandler(object):
     '''
+    The shape handler enables capabilities to be added to shapes.
+    A capability makes use of the shape only.
+    The shape handler also holds a unique id to break ties in the depth, and thus provides
+    a consistency in the depth if the shape handler is kept for the same logical object in the game.
+    (I.e.: each logical object should be assigned to one shape handler)
     
-    
-    TODO: more as a note to self. It may be worth enabling a sort of auto forget
-    feature, where shapes keep track of their handlers, and are only forgotten
-    when no more handlers exist.
+    Note to self:
+    There were several capabilities that cared about the shape, but none other than
+    the drawer cared about actually drawing the shapes on screen. Changes in appearance but not shape
+    do not need to be reported to capabilities, so it is handled separately.
     '''
+    
+    #Constant flags for the updates to capabilities
+    _DEPTH_UPDATE = 0
+    _BOUNDING_RECTANGLE_UPDATE = 1
+    #A shape update means the internal shape has been updated. This should be considered to mean
+    #everything has changed, as that is possible.
+    _SHAPE_UPDATE = 2
+    
+    #A static lock for the unique id
+    __lock = threading.Semaphore()
+    __unique_id = 0
 
-
-    def __init__(self, shape_calculator):
+    def __init__(self, shape, depth, bounding_rectangle):
         '''
         Construct a new shape handler. A shape handler enables capabilities to be added to shape
-        calculators.
-        @param shape_calculator: the (default) shape calculator used when abilities are added.
+        calculators. (You must call this constructor if you subclass this)
+        @param shape: the shape used when capabilities are added.
+        @param depth: the depth that this shape handler should consider its shape to be at.
+        (will be augmented with a tie-breaking unique id)
+        @param bounding_rectangle: a bounding rectangle for the shape, which should be wide and high enough
+        to completely contain the shape's calculations of itself. The bounding rectangle's top left
+        coordinate represents the top left coordinate of the shape on screen.
         '''
-        self.__shape_calculator = shape_calculator
-    
-    #For thread safety
-    __lock = threading.Semaphore()
-    #The saved shape calculations
-    __memorised_calculations = collections.defaultdict(lambda:None)
-    #This remembers all of the precisions saved for a particular shape
-    __memorised_shape_precisions = collections.defaultdict(lambda:set())
-    
-    @staticmethod
-    def remember_shape_calculation(shape_calculator, precision):
-        '''
-        Remember the shape calculator's calculated shape (?!) at a particular precision.
-        If this precision is requested from any capability again, the calculation can be looked
-        up much more quickly and will bypass the shape calculator. (Note that this does not save
-        the shape calculator in some sense. You'll want to save images yourself by reusing
-        the same references... Since you can only save immutable shape calculators, this is highly
-        recommended). It is important to forget saves when you no longer need them!
-        @warning: this only makes any difference if the shape calculator is labelled as immutable.
-        Otherwise, this call does nothing!! It also does nothing if it was saved previously...
-        @param shape_calculator: the shape calculator
-        @param precision: the precision that the calculation should be performed at
-        '''
+        self.__shape = shape
+        self.__bounding_rectangle = bounding_rectangle
+        self.__depth = depth
+        #Set the unique id
         ShapeHandler.__lock.acquire()
-        if shape_calculator.is_immutable() and ShapeHandler.__memorised_calculations[(shape_calculator,precision)]==None:
-            #Calculate and save
-            ShapeHandler.__memorised_shape_precisions[shape_calculator].add(precision)
-            ShapeHandler.__memorised_calculations[(shape_calculator,precision)] = shape_calculator.calculate_shape(precision)
+        self.__unique_id = ShapeHandler.__unique_id
+        ShapeHandler.__unique_id+=1
         ShapeHandler.__lock.release()
-    
-    @staticmethod
-    def forget_shape_calculation(shape_calculator, precision):
-        '''
-        @param shape_calculator: the shape calculator whose calculation should be forgotten
-        @param precision: the specific precision to be forgotten
-        '''
-        ShapeHandler.__lock.acquire()
-        if ShapeHandler.__memorised_calculations[(shape_calculator,precision)]!=None:
-            #Remove the key
-            ShapeHandler.__memorised_calculations.pop((shape_calculator,precision))
-            #Remove the precision
-            ShapeHandler.__memorised_shape_precisions[shape_calculator].remove(precision)
-            if len(ShapeHandler.__memorised_shape_precisions[shape_calculator])==0:
-                ShapeHandler.__memorised_shape_precisions.pop(shape_calculator)
-        ShapeHandler.__lock.release()
+        #The capabilities maintained
+        self.__capabilities = set()
         
-    @staticmethod
-    def forget_shape_calculations(shape_calculator):
+    def get_shape(self):
         '''
-        @param shape_calculator: the shape calculator whose calculations should be forgotten.
-        This forgets all of the precisions saved. Typically, this is the recommended forget method to be used,
-        as your game will likely not need certain shapes (images usually) in certain sections.
+        @return: the shape held by this shape handler
         '''
-        ShapeHandler.__lock.acquire()
-        precisions = ShapeHandler.__memorised_shape_precisions[shape_calculator]
-        if len(precisions)!=0:
-            #Remove keys...
-            for precision in precisions:
-                ShapeHandler.__memorised_calculations.pop((shape_calculator,precision))
-            #Remove from the precisions
-            ShapeHandler.__memorised_shape_precisions.pop(shape_calculator)
-        ShapeHandler.__lock.release()
+        return self.__shape
+    
+    def set_shape(self,shape, bounding_rectangle=None, depth=None):
+        '''
+        @param shape: the shape this handler should now use.
+        @param bounding_rectangle: the bounding rectangle to use with the new shape.
+        I the shape has changed size, it is important to set this to keep it consistent. None will
+        leave the bounding rectangle unchanged.
+        @param depth: the depth to use with the new shape. None will leave the depth unchanged.
+        '''
+        if ((shape==self.__shape) and
+            (depth==None or self.__depth==depth) and
+            (bounding_rectangle==None or self.__bounding_rectangle==bounding_rectangle)):
+            #Nothing changed
+            return
+        #Tell the handlers what is happening before the update...
+        self.__prior_update(ShapeHandler._SHAPE_UPDATE)
+        if depth!=None:
+            self.__depth = depth
+        if bounding_rectangle!=None:
+            self.__bounding_rectangle = bounding_rectangle
+        self.__shape = shape
+        #and update them...
+        self.__post_update(ShapeHandler._SHAPE_UPDATE)
+    
+    def get_bounding_rectangle(self):
+        '''
+        @return: a single rectangle covering the whole shape in the form of (x_min,y_min,x_max,y_max)
+        '''
+        return self.__bounding_rectangle
         
-    @staticmethod
-    def forget_all_shape_calculations():
+    def set_bounding_rectangle(self, bounding_rectangle):
         '''
-        Forget all shape calculations ever saved. This really does forget everything. Note that
-        everything will still function, but if calculations were saved for efficiency things might slow
-        down. This will free up memory in an emergency.
+        @param bounding_rectangle: the new bounding rectangle to use.
         '''
-        ShapeHandler.__memorised_shape_precisions.clear()
-        ShapeHandler.__memorised_calculations.clear()
+        if bounding_rectangle==self.__bounding_rectangle:
+            return
+        #Tell the handlers what is happening before the update...
+        self.__prior_update(ShapeHandler._BOUNDING_RECTANGLE_UPDATE)
+        self.__bounding_rectangle = bounding_rectangle
+        #and update them...
+        self.__post_update(ShapeHandler._BOUNDING_RECTANGLE_UPDATE)
+        
+    def get_depth(self):
+        '''
+        @return: a pair of (depth,unique_id) representing the depth at which this image exists.
+        If image one has depth x and image two has depth y, if x>y, image one will appear behind image two.
+        The unique id should be used to break ties in the same way.
+        '''
+        return (self.__depth,self.__unique_id)
+        
+    def set_depth(self, depth):
+        '''
+        @param depth: the depth of the shape on screen.
+        '''
+        if self.__depth==depth:
+            return
+        #Tell the handlers what is happening before the update...
+        self.__prior_update(ShapeHandler._DEPTH_UPDATE)
+        self.__depth = depth
+        #and update them...
+        self.__post_update(ShapeHandler._DEPTH_UPDATE)
+    
+    def __prior_update(self, flag):
+        '''
+        Tell all of the attached capabilities about the update strictly before anything has changed
+        @param flag: a flag signalling what kind of update this is (constants defined in the shape handler)
+        '''
+        for capability in self.__capabilities:
+            capability.prior_update(flag)
+    
+    def __post_update(self, flag):
+        '''
+        Tell all of the attached capabilities about the update strictly after everything has been changed
+        @param flag: a flag signalling what kind of update this is (constants defined in the shape handler)
+        '''
+        for capability in self.__capabilities:
+            capability.post_update(flag)
+    
+    def _enable_capability(self, capability):
+        '''
+        This method is called by the capability itself when it is enabled.
+        @param capability: the capability being added
+        '''
+        self.__capabilities.add(capability)
+        
+    def _disable_capability(self, capability):
+        '''
+        This method is called by the capability itself when it is disabled.
+        @param capability: the capability being removed
+        '''
+        self.__capabilities.remove(capability)
