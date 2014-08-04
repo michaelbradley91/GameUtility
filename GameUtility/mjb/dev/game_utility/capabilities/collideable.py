@@ -64,7 +64,7 @@ class CollisionScreen(object):
         '''
         #Get the inner rectangles...
         (rect_list,rect_collider) = shape_handler.get_shape().calculate_shape(precision)
-        res = CollisionScreen.__screen.collide_rectangle(self, shape_handler.get_bounding_rectangle(), rect_list, rect_collider)
+        res = CollisionScreen.__screen.collide_rectangle(shape_handler.get_bounding_rectangle(), rect_list, rect_collider)
         shape_handlers = []
         for (_,_,_,_,collideable) in res:
             shape_handlers.append(collideable.get_shape_handler())

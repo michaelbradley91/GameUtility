@@ -112,6 +112,8 @@ class ShapeHandler(object):
         '''
         @param depth: the depth of the shape on screen.
         '''
+        #Note to self: Nothing ever needs to know the depth has been updated, so this is a waste
+        #of time even if it helps the abstraction...
         if self.__depth==depth:
             return
         #Tell the handlers what is happening before the update...
@@ -149,3 +151,4 @@ class ShapeHandler(object):
         @param capability: the capability being removed
         '''
         self.__capabilities.remove(capability)
+    
