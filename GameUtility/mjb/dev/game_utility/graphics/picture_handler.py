@@ -64,12 +64,6 @@ class Drawer(object):
     (Or be more explicit about the depth...)
     '''
     
-    def __init__(self):
-        '''
-        A constructor which does nothing
-        '''
-        pass
-    
     def redraw(self, top_left, surface):
         '''
         Called by the picture handler when this object needs to redraw itself
@@ -272,8 +266,7 @@ class PictureHandler(object):
             #Use a small rectangle tree for the screen itself
             SmallRectangleTree(PictureHandler.__size),
             #These rectangles are plain old big rectangles.
-            lambda _: [],
-            lambda _: None
+            lambda _: ([],None)
             )
         #Fill it
         PictureHandler.__fill_screen_tree()
@@ -283,8 +276,7 @@ class PictureHandler(object):
             #Use a large rectangle tree to hold the picture
             LargeRectangleTree(PictureHandler.__size),
             #Extract the inner rectangles from the drawer
-            lambda (a,b,c,d,drawer): drawer.get_inner_rectangles(),
-            lambda (a,b,c,d,drawer): drawer.get_inner_collider()
+            lambda (a,b,c,d,drawer): (drawer.get_inner_rectangles(),drawer.get_inner_collider())
             )
         
     @staticmethod

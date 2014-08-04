@@ -25,7 +25,7 @@ class TestScreenCollider(unittest.TestCase):
         '''
         for x in range(0,len(TestScreenCollider.rect_make_list)):
             #Firstly, try adding various "simpler" rectangles...
-            rect_collider = ScreenCollider(TestScreenCollider.rect_make_list[x]((100,200)),lambda _:[],lambda _:None)
+            rect_collider = ScreenCollider(TestScreenCollider.rect_make_list[x]((100,200)),lambda _:([],None))
             rect_collider.insert_rectangle((5,25,80,30,"key 1"))
             rect_collider.insert_rectangle((5,25,80,30,"key 2"))
             rect_collider.insert_rectangle((25,5,80,30,"key 1"))
@@ -49,7 +49,7 @@ class TestScreenCollider(unittest.TestCase):
         Test the clear method of a rectangle collider.
         '''
         for x in range(0,len(TestScreenCollider.rect_make_list)):
-            rect_collider = ScreenCollider(TestScreenCollider.rect_make_list[x]((450,200)),lambda _:[],lambda _:None)
+            rect_collider = ScreenCollider(TestScreenCollider.rect_make_list[x]((450,200)),lambda _:([],None))
             #Insert some stuff...
             rect_collider.insert_rectangle((5,25,80,30,"key 1"))
             rect_collider.insert_rectangle((5,25,80,30,"key 2"))
@@ -69,7 +69,7 @@ class TestScreenCollider(unittest.TestCase):
         Test the clipping by the rectangle collider.
         '''
         for x in range(0,len(TestScreenCollider.rect_make_list)):
-            rect_collider = ScreenCollider(TestScreenCollider.rect_make_list[x]((50,50)),lambda _:[],lambda _:None)
+            rect_collider = ScreenCollider(TestScreenCollider.rect_make_list[x]((50,50)),lambda _:([],None))
             #Firstly, make sure that if we add a rectangle which partially fits inside the collider,
             #it will remain inside
             rect_collider.insert_rectangle((-10,-10,1,1,"key"))
@@ -93,7 +93,7 @@ class TestScreenCollider(unittest.TestCase):
         size = (50,50)
         (width,height) = size
         for x in range(0,len(TestScreenCollider.rect_make_list)):
-            rect_collider = ScreenCollider(TestScreenCollider.rect_make_list[x](size),lambda _:[],lambda _:None)
+            rect_collider = ScreenCollider(TestScreenCollider.rect_make_list[x](size),lambda _:([],None))
             #Add a lot of rectangles...
             rect_list = []
             for x in range(0,(width/2)-1):
@@ -164,14 +164,9 @@ class TestScreenCollider(unittest.TestCase):
         return res
     
     @staticmethod
-    def default_get_rect_list((a,b,c,d,(rect_list,e))):
+    def default_get_shape((a,b,c,d,shape)):
         #Get the rectangle list from the keyed rectangle
-        return rect_list
-    
-    @staticmethod
-    def default_get_rect_collider((a,b,c,d,(e,rect_collider))):
-        #Get the rectangle collider from the keyed rectangle
-        return rect_collider
+        return shape
 
     def test_precise_collision(self):
         '''
@@ -181,8 +176,7 @@ class TestScreenCollider(unittest.TestCase):
         #necessarily indicate a genuine collision when examined in detail.
         
         rect_collider = ScreenCollider(SimpleRectangleCollider((100,100))
-                                       ,TestScreenCollider.default_get_rect_list,
-                                       TestScreenCollider.default_get_rect_collider)
+                                       ,TestScreenCollider.default_get_shape)
         #Now add some c shaped rectangles...
         inner_collider = SimpleRectangleCollider((30,30))
         '''

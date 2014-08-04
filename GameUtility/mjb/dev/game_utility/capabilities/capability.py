@@ -37,7 +37,7 @@ class Capability(object):
         '''
         pass
     
-    def set_precision(self):
+    def set_precision(self, precision):
         '''
         @param precision: the new precision this capability should use.
         '''

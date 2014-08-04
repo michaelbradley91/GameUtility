@@ -17,12 +17,6 @@ class _PictureHandler(object):
     Anything trying to set itself as a picture handler should inherit from this class.
     '''
     
-    def __init__(self):
-        '''
-        Construct a new picture handler
-        '''
-        pass
-    
     def get_picture(self):
         '''
         By default, this returns the background image.
