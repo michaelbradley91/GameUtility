@@ -31,7 +31,7 @@ class TouchScreen(object):
             TouchScreen.__screen = ScreenCollider(LargeRectangleTree(Screen.get_screen_size()),
                                                       lambda (a,b,c,d,collideable): collideable._get_inner_shape())
             TouchScreen.__is_initialised = True
-        
+        TouchScreen._TouchScreenMouseMotionListener()
     #The screen that the collisions are checked on...
     __screen = None
     __is_initialised = False
@@ -40,7 +40,7 @@ class TouchScreen(object):
     _touchables_entered = set()
     
     #The mouse motion listener
-    class _ClickScreenMouseButtonListener(MouseMotionListener):
+    class _TouchScreenMouseMotionListener(MouseMotionListener):
         def mouse_moved(self,location):
             #Forward to the touch screen
             TouchScreen._mouse_moved(location)
@@ -71,7 +71,7 @@ class TouchScreen(object):
         touchables = TouchScreen.__screen.collide_rectangle((x_min,y_min,x_min+1,y_min+1), [], None)
         touchable_set = set()
         #Update the objects which it (just) entered
-        for touchable in touchables:
+        for (_,_,_,_,touchable) in touchables:
             touchable_set.add(touchable)
             if not touchable in TouchScreen._touchables_entered:
                 (touchable._get_mouse_enter_handler())()
@@ -118,7 +118,7 @@ class Touchable(Capability):
         self.__mouse_leave_handler = mouse_leave_handler
         #Attach myself to the collision screen if I'm enabled.
         if self.__enabled:
-            TouchScreen._insert_collideable(self)
+            TouchScreen._insert_touchable(self)
             self.__shape_handler._enable_capability(self)
         
     def get_shape_handler(self):
@@ -184,7 +184,7 @@ class Touchable(Capability):
         if self.__enabled:
             if flag!=ShapeHandler._DEPTH_UPDATE:
                 #We need to reset...
-                TouchScreen._remove_collideable(self)
+                TouchScreen._remove_touchable(self)
     
     def post_update(self, flag):
         '''
@@ -197,7 +197,7 @@ class Touchable(Capability):
             #The depth is not important for us
             if flag!=ShapeHandler._DEPTH_UPDATE:
                 #We need to reset...
-                TouchScreen._insert_collideable(self)
+                TouchScreen._insert_touchable(self)
     
     def enable(self):
         '''
@@ -205,7 +205,7 @@ class Touchable(Capability):
         '''
         if not self.__enabled:
             #Attach myself
-            TouchScreen._insert_collideable(self)
+            TouchScreen._insert_touchable(self)
             self.__enabled = True
             self.__shape_handler._enable_capability(self)
         
@@ -215,7 +215,7 @@ class Touchable(Capability):
         '''
         if self.__enabled:
             #Detach myself
-            TouchScreen._remove_collideable(self)
+            TouchScreen._remove_touchable(self)
             self.__enabled = False
             self.__shape_handler._disable_capability(self)
             

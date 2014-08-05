@@ -39,6 +39,10 @@ class RectangleDrawer(Shape):
             #Register with the picture handler so that I will appear!
             self.__drawable_capability.enable()
     
+    def get_shape_handler(self):
+        #Needed before refactoring to return the shape handler for further capabilities to be added...
+        return self.__handler
+    
     #Override
     def redraw(self, top_left, surface):
         #TODO REMOVE print("Asked to redraw")

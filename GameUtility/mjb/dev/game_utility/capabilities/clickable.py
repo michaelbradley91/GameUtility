@@ -28,6 +28,8 @@ class ClickScreen(object):
             ClickScreen.__screen = ScreenCollider(LargeRectangleTree(Screen.get_screen_size()),
                                                       lambda (a,b,c,d,clickable): clickable._get_inner_shape())
             ClickScreen.__is_initialised = True
+        #Start listening...
+        ClickScreen._ClickScreenMouseButtonListener()
         
     #The screen that the collisions are checked on...
     __screen = None
@@ -79,13 +81,18 @@ class ClickScreen(object):
         #Collide the mouse with all objects on the screen...
         (x_min,y_min) = location
         clickables = ClickScreen.__screen.collide_rectangle((x_min,y_min,x_min+1,y_min+1), [], None)
+        #Convert the list...
+        temp_list = []
+        for (_,_,_,_,clickable) in clickables:
+            temp_list.append(clickable)
+        clickables = temp_list
         #Find out which is the minimum...
         if clickables!=[]:
             #Some minimum to find
-            min_depth = clickables[0].get_depth()
+            min_depth = clickables[0]._get_depth()
             min_index = 0
             for index in range(1,len(clickables)):
-                depth = clickables[index].get_depth()
+                depth = clickables[index]._get_depth()
                 if depth<min_depth:
                     min_depth = depth
                     min_index = index
@@ -170,7 +177,7 @@ class Clickable(Capability):
         '''
         return self.__shape_handler.get_depth()
     
-    def _get_button_up_hander(self):
+    def _get_button_up_handler(self):
         '''
         @return: the button up handler held by this clickable object
         '''

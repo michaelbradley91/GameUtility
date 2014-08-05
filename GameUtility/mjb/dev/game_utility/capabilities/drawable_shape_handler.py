@@ -35,21 +35,19 @@ class DrawableShapeHandler(ShapeHandler):
         This method is called by the capability itself when it is enabled.
         @param capability: the capability being added
         '''
-        if capability is Drawable:
+        if type(capability) is Drawable:
             #Hold this separately
             self.__drawable_capability = capability
-        else:
-            ShapeHandler._enable_capability(self, capability)
+        ShapeHandler._enable_capability(self, capability)
         
     def _disable_capability(self, capability):
         '''
         This method is called by the capability itself when it is disabled.
         @param capability: the capability being removed
         '''
-        if capability is Drawable:
+        if type(capability) is Drawable:
             #Remove this specially
             self.__drawable_capability = None
-        else:
-            ShapeHandler._disable_capability(self, capability)
+        ShapeHandler._disable_capability(self, capability)
     
         

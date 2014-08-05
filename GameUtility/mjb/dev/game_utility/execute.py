@@ -16,6 +16,11 @@ import mjb.dev.game_utility.input_listeners.frame_listener as frame_listeners
 import time
 import mjb.dev.game_utility.test_bed as test_bed
 import mjb.dev.game_utility.graphics.image as image
+from mjb.dev.game_utility.capabilities.touchable import Touchable
+from mjb.dev.game_utility.capabilities.touchable import TouchScreen
+from mjb.dev.game_utility.capabilities.clickable import ClickScreen
+from mjb.dev.game_utility.capabilities.collideable import CollisionScreen
+from mjb.dev.game_utility.capabilities.clickable import Clickable
 
 class DummyKeyListener(key_listeners.KeyboardListener,frame_listeners.FrameListener):
     
@@ -23,10 +28,28 @@ class DummyKeyListener(key_listeners.KeyboardListener,frame_listeners.FrameListe
         #Initialise both keys...
         key_listeners.KeyboardListener.__init__(self,keys)
         frame_listeners.FrameListener.__init__(self)
+        
+    def mouse_enter_handler(self):
+        #Colour the rectangle...
+        self.rectangle.set_colour((128,0,0))
+        
+    def mouse_leave_handler(self):
+        #Set its colour back again
+        self.rectangle.set_colour((255,0,0))
+        
+    def button_down_handler(self,button,on_top):
+        self.rectangle.set_colour((0,255,0))
+        
+    def button_up_handler(self,button,on_top):
+        self.rectangle.set_colour((255,0,0))
     
     #A rectangle to play with
     def start(self):
         self.rectangle = rectangle_drawer.RectangleDrawer((5,5,100,100),(255,0,0),10)
+        #Attach a mouse enter and leave capability!
+        Touchable(self.rectangle.get_shape_handler(),None,self.mouse_enter_handler,self.mouse_leave_handler)
+        #Attach a click handler
+        Clickable(self.rectangle.get_shape_handler(),None,self.button_down_handler, self.button_up_handler)
         rectangle_drawer.RectangleDrawer((220,200,70,30),(0,255,0),20)
         rectangle_drawer.RectangleDrawer((280,210,50,40),(0,0,255),5)
         rectangle_drawer.RectangleDrawer((260,205,100,10),(255,0,255),12)
@@ -146,7 +169,12 @@ def run():
     '''Initialise the picture handler!'''
     
     screen.Screen.initialise("My game",(100,100,100),max_frame_rate=60)
+    #Initialise everything...
     picture_handler.PictureHandler.initialise()
+    TouchScreen.initialise()
+    ClickScreen.initialise()
+    CollisionScreen.initialise()
+    
     #Create a keyboard listener...
     
     key_listener = DummyKeyListener([pygame.locals.K_ESCAPE,
