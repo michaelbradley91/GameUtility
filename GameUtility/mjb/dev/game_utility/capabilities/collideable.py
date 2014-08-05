@@ -170,3 +170,9 @@ class Collideable(Capability):
             CollisionScreen._remove_collideable(self)
             self.__enabled = False
             self.__shape_handler._disable_capability(self)
+            
+    def is_enabled(self):
+        '''
+        @return: true iff this capability is enabled
+        '''
+        return self.__enabled

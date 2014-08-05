@@ -70,3 +70,9 @@ class Capability(object):
         '''
         pass
     
+    def is_enabled(self):
+        '''
+        @return: true iff this capability is enabled
+        '''
+        pass
+    

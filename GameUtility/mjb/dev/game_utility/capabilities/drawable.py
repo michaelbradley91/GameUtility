@@ -33,16 +33,16 @@ class Drawable(Capability):
     
         def redraw(self, top_left, surface):
             #Redraw yourself!
-            self.__drawable._get_redraw_handler(top_left,surface)
+            (self.__drawable._get_redraw_handler())(top_left,surface)
         
         def get_bounding_rectangle(self):
-            self.__drawable._get_bounding_rectangle()
+            return self.__drawable._get_bounding_rectangle()
         
         def get_inner_shape(self):
-            self.__drawable._get_inner_shape()
+            return self.__drawable._get_inner_shape()
         
         def get_depth(self):
-            self.__drawable._get_depth()
+            return self.__drawable._get_depth()
     
     def __init__(self, shape_handler, precision, redraw_handler, enabled=True):
         '''
@@ -103,6 +103,13 @@ class Drawable(Capability):
         '''
         return self.__redraw_handler
     
+    def _get_depth(self):
+        '''
+        A method to return the depth
+        @return: the depth of the bounding rectangle
+        '''
+        return self.__shape_handler.get_depth()
+    
     def prior_appearance_update(self):
         '''
         To be called strictly before the appearance of a drawable shape handler is changed.
@@ -157,3 +164,9 @@ class Drawable(Capability):
             PictureHandler.deregister_drawer(self.__inner_drawer)
             self.__enabled = False
             self.__shape_handler._disable_capability(self)
+            
+    def is_enabled(self):
+        '''
+        @return: true iff this capability is enabled
+        '''
+        return self.__enabled

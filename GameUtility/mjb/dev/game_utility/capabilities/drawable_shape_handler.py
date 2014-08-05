@@ -20,7 +20,7 @@ class DrawableShapeHandler(ShapeHandler):
         '''
         This method should be called whenever you intend to change the appearance of an object on
         screen.
-        @param change_function: the function to implement the change in appearance, accepting
+        @param change_function: the function to implement the change in appearance
         @param param: the parameter to be passed to the change function (for convenience)
         '''
         if self.__drawable_capability!=None:

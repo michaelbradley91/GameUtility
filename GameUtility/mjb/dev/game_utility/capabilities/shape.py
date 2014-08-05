@@ -19,12 +19,10 @@ class Shape(object):
     To change this (such as in a rotation), change the shape held by the shape handler.
     '''
 
-    def __init__(self, bounding_rectangle, depth=0, cache_depth=2):
+    def __init__(self, cache_depth=2):
         '''
         Construct a new shape calculator (use whatever constructor you want). You should call
         this if you are subclassing.
-        @param bounding_rectangle: the rectangle bounding this shape
-        @param depth: the depth of this shape (default 0)
         @param cache_depth: will automatically cache calculations, keeping up the cache_depth calculations
         in the stack. This uses memory but significantly improves performance. This must not be negative.
         '''
