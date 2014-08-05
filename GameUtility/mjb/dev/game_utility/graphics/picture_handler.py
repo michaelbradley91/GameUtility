@@ -84,57 +84,21 @@ class Drawer(object):
         '''
         pass
     
-    def get_inner_rectangles(self):
+    def get_inner_shape(self):
         '''
         @return: the inner rectangles more accurately representing the space occupied by
-        the drawer. This is intended to remain static (change the drawer if the image
-        changes). The rectangles should be of the form (x_min,y_min,x_max,y_max).
-        Use an empty list if the bounding rectangle is accurate enough.
-        This should not change.
-        '''
-        pass
-    
-    def get_inner_collider(self):
-        '''
-        @return: a rectangle collider containing all of the inner rectangles.
-        Leave this as None if no such rectangle is required. This should not change.
+        the drawer. This should be a pair of (rectangle_list,collider). If no inner representation
+        exists, this should be ([],None)
         '''
         pass
     
     def get_depth(self):
         '''
-        @return: the depth this drawer wishes to draw at. This should not change.
+        @return: the depth this drawer wishes to draw at. This should not change, and should
+        be unique to each object to be drawn.
         '''
-    
-    #The unique id assigned to the different picture handlers
-    #Note: python will convert this to a big integer if it starts to overflow!
-    __unique_static_id = 0L
-    #Lock for thread safety (redundant but doesn't add much here)
-    __lock = threading.Semaphore()
-    
-    #Default id...
-    __unique_id = None
-    
-    def _set_unique_id(self):
-        '''
-        Set the unique id of this drawer object. If this has already been set, this will do nothing
-        '''
-        if self.__unique_id==None:
-            Drawer.__lock.acquire()
-            #Now get the value
-            self.__unique_id = Drawer.__unique_static_id
-            Drawer.__unique_static_id+=1
-            Drawer.__lock.release()
-    
-    def _get_unique_id(self):
-        '''
-        Return the unique id. This returns None if not set already.
-        '''
-        return self.__unique_id
+        pass
         
-        
-        
-
 class _DummyPictureHandler(_PictureHandler):
     '''
     This handler just passes the calls to the static class
@@ -276,7 +240,7 @@ class PictureHandler(object):
             #Use a large rectangle tree to hold the picture
             LargeRectangleTree(PictureHandler.__size),
             #Extract the inner rectangles from the drawer
-            lambda (a,b,c,d,drawer): (drawer.get_inner_rectangles(),drawer.get_inner_collider())
+            lambda (a,b,c,d,drawer): drawer.get_inner_shape()
             )
         
     @staticmethod
@@ -297,9 +261,9 @@ class PictureHandler(object):
         rect = drawer.get_bounding_rectangle()
         #Add the rectangle to the screen rectangle tree by colliding it first
         #TODO REMOVE print("Adding rectangle " + str(rect))
-        #TODO REMOVE print("Got inner rectangles as " + str(drawer.get_inner_rectangles()) + " and inner collider " + str(drawer.get_inner_collider()))
+        (rect_list,collider) = drawer.get_inner_shape()
         collided_rects = PictureHandler.__screen_rectangle_tree.collide_rectangle(
-            rect,drawer.get_inner_rectangles(),drawer.get_inner_collider())
+            rect,rect_list,collider)
         #TODO REMOVE print("Got collided rectangles " + str(collided_rects))
         #Now remove the collided rectangles
         for rect in collided_rects:
@@ -359,7 +323,7 @@ class PictureHandler(object):
         collided_list = []
         #TODO REMOVE print("Got collided rectangles " + str(collided_rectangles))
         for (_,_,_,_,drawer) in collided_rectangles:
-            collided_list.append(((drawer.get_depth(),drawer._get_unique_id()),drawer))
+            collided_list.append((drawer.get_depth(),drawer))
         #Sort by the first element only
         collided_list.sort(key=lambda tup: tup[0], reverse=True)
         #Now we call the redraw methods appropriately...
@@ -430,8 +394,6 @@ class PictureHandler(object):
         You must not register twice!
         @param drawer: the drawer to register with the rectangles.
         '''
-        #Set the drawer's unique id
-        drawer._set_unique_id()
         #Now synchronise...
         PictureHandler.__picture_lock.acquire()
         #Add the key (the depth + drawer) to the rectangles...

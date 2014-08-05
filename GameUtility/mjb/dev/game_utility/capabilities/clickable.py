@@ -80,26 +80,23 @@ class ClickScreen(object):
         (x_min,y_min) = location
         clickables = ClickScreen.__screen.collide_rectangle((x_min,y_min,x_min+1,y_min+1), [], None)
         #Find out which is the minimum...
-        shape_handlers = []
         if clickables!=[]:
             #Some minimum to find
             min_depth = clickables[0].get_depth()
             min_index = 0
-            shape_handlers.append(clickables[0].get_shape_handler())
             for index in range(1,len(clickables)):
                 depth = clickables[index].get_depth()
-                shape_handlers.append(clickables[index].get_shape_handler())
                 if depth<min_depth:
                     min_depth = depth
                     min_index = index
-            min_shape_handler = clickables[min_index].get_shape_handler()
+            min_clickable = clickables[min_index]
             #Got the minimum! Now update the clickable objects...
             if is_down:
                 for clickable in clickables:
-                    (clickable._get_button_down_handler())(button,(shape_handlers,min_shape_handler))
+                    (clickable._get_button_down_handler())(button, clickable==min_clickable)
             else:
                 for clickable in clickables:
-                    (clickable._get_button_up_handler())(button,(shape_handlers,min_shape_handler))
+                    (clickable._get_button_up_handler())(button, clickable==min_clickable)
     
     @staticmethod
     def _mouse_button_up(button, location):
@@ -120,15 +117,14 @@ class Clickable(Capability):
         '''
         @param shape_handler: the shape handler this is concerned with
         @param precision: the precision that collisions with this shape should be calculated at.
-        @param button_down_handler: a function prepared to accept a button (a constant matching that
-        inside the mouse_button_listener) and a second argument - see below.
+        @param button_down_handler: a function prepared to accept a button and a flag which will be true iff
+        you were the top element clicked on*.
         @param button_up_handler: a hander with the same parameters as the button_down_handler
         (but called when a mouse button is released)
         @param enabled: true by default, whether or not the object should be clickable immediately
         
-        @note: the second parameter to the button_down_handler is a pair of a list of all objects clicked on,
-        and as the second element, the one which had the lowest depth (was on top). You may only
-        want to act if you were the top element clicked on.
+        *Awkwardly, if you wanted other elements to block a click event by being on top, you'll need
+        to make them clickable too to swallow the event.
         '''
         self.__precision = precision
         self.__shape_handler = shape_handler
