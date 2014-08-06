@@ -8,7 +8,7 @@ from mjb.dev.game_utility.capabilities.capability import Capability
 from mjb.dev.game_utility.graphics.screen import Screen
 from mjb.dev.game_utility.collisions.screen_collider import ScreenCollider
 from mjb.dev.game_utility.collisions.large_rectangle_tree import LargeRectangleTree
-from mjb.dev.game_utility.capabilities.shape_handler import ShapeHandler
+from mjb.dev.game_utility.shapes.handlers.shape_handler import ShapeHandler
 from mjb.dev.game_utility.input_listeners.mouse_motion_listener import MouseMotionListener
 
 class TouchScreen(object):
@@ -224,3 +224,10 @@ class Touchable(Capability):
         @return: true iff this capability is enabled
         '''
         return self.__enabled
+    
+    def dispose(self):
+        '''
+        Dispose of this capability (freeing memory)
+        Once called, the capability should not be used again
+        '''
+        self.disable()

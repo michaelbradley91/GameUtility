@@ -11,7 +11,7 @@ import mjb.dev.game_utility.graphics.picture_handler as picture_handler
 import pygame.locals
 import mjb.dev.game_utility.collisions.large_rectangle_tree as rect_tree
 import mjb.dev.game_utility.utility.rectangle_filler as rect_filler
-import mjb.dev.game_utility.graphics.drawers.rectangle_drawer as rectangle_drawer
+import mjb.dev.game_utility.shapes.handlers.drawable_rectangle_handler as drawable_rectangle_handler
 import mjb.dev.game_utility.input_listeners.frame_listener as frame_listeners
 import time
 import mjb.dev.game_utility.test_bed as test_bed
@@ -45,16 +45,16 @@ class DummyKeyListener(key_listeners.KeyboardListener,frame_listeners.FrameListe
     
     #A rectangle to play with
     def start(self):
-        self.rectangle = rectangle_drawer.RectangleDrawer((5,5,100,100),(255,0,0),10)
+        self.rectangle = drawable_rectangle_handler.DrawableRectangleHandler((5,5,100,100),(255,0,0),10)
         #Attach a mouse enter and leave capability!
-        Touchable(self.rectangle.get_shape_handler(),None,self.mouse_enter_handler,self.mouse_leave_handler)
+        Touchable(self.rectangle,None,self.mouse_enter_handler,self.mouse_leave_handler)
         #Attach a click handler
-        Clickable(self.rectangle.get_shape_handler(),None,self.button_down_handler, self.button_up_handler)
-        rectangle_drawer.RectangleDrawer((220,200,70,30),(0,255,0),20)
-        rectangle_drawer.RectangleDrawer((280,210,50,40),(0,0,255),5)
-        rectangle_drawer.RectangleDrawer((260,205,100,10),(255,0,255),12)
+        Clickable(self.rectangle,None,self.button_down_handler, self.button_up_handler)
+        drawable_rectangle_handler.DrawableRectangleHandler((220,200,70,30),(0,255,0),20)
+        drawable_rectangle_handler.DrawableRectangleHandler((280,210,50,40),(0,0,255),5)
+        drawable_rectangle_handler.DrawableRectangleHandler((260,205,100,10),(255,0,255),12)
         for x in range(0,100):
-            rectangle_drawer.RectangleDrawer((220+(x*2),400+(x*2),70,30+(x*1)),(x*1,255-(x*1),0),20)
+            drawable_rectangle_handler.DrawableRectangleHandler((220+(x*2),400+(x*2),70,30+(x*1)),(x*1,255-(x*1),0),20)
         self.key_UP = False
         self.key_DOWN = False
         self.key_LEFT = False

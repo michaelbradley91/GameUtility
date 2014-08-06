@@ -28,6 +28,7 @@ class Capability(object):
         handler.
         @param event_handler: a method to be called whenever this capability activates.
         @param enabled: true by default, whether or not the capability should be active
+        @warning: never add the same capability to one shape handler twice!!! (or more times)
         '''
         pass
     
@@ -73,6 +74,13 @@ class Capability(object):
     def is_enabled(self):
         '''
         @return: true iff this capability is enabled
+        '''
+        pass
+    
+    def dispose(self):
+        '''
+        Dispose of this capability (freeing memory)
+        Once called, the capability should not be used again
         '''
         pass
     

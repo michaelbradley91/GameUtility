@@ -31,19 +31,23 @@ class ShapeHandler(object):
     __lock = threading.Semaphore()
     __unique_id = 0
 
-    def __init__(self, shape, depth, bounding_rectangle):
+    def __init__(self, shape, depth, top_left):
         '''
         Construct a new shape handler. A shape handler enables capabilities to be added to shape
         calculators. (You must call this constructor if you subclass this)
         @param shape: the shape used when capabilities are added.
         @param depth: the depth that this shape handler should consider its shape to be at.
         (will be augmented with a tie-breaking unique id)
-        @param bounding_rectangle: a bounding rectangle for the shape, which should be wide and high enough
-        to completely contain the shape's calculations of itself. The bounding rectangle's top left
-        coordinate represents the top left coordinate of the shape on screen.
+        @param top_left: An (x,y) coordinate representing where the top left of the shape
+        should appear on screen (as in the shape will be put into (x,y,width,height) for width
+        and height determined by the shape's size)
         '''
         self.__shape = shape
-        self.__bounding_rectangle = bounding_rectangle
+        self.__top_left = top_left
+        #Figure out the bounding rectangle for convenience...
+        (x,y) = self.__top_left
+        (width,height) = self.__shape.get_size()
+        self.__bounding_rectangle = (x,y,x+width,y+height)
         self.__depth = depth
         #Set the unique id
         ShapeHandler.__lock.acquire()
@@ -59,28 +63,38 @@ class ShapeHandler(object):
         '''
         return self.__shape
     
-    def set_shape(self,shape, bounding_rectangle=None, depth=None):
+    def set_shape(self,shape, top_left=None, depth=None):
         '''
         @param shape: the shape this handler should now use.
-        @param bounding_rectangle: the bounding rectangle to use with the new shape.
-        I the shape has changed size, it is important to set this to keep it consistent. None will
-        leave the bounding rectangle unchanged.
+        @param top_left: the new top left coordinate for this shape. Leave as None (default)
+        if you wish for this to remain unchanged
         @param depth: the depth to use with the new shape. None will leave the depth unchanged.
         '''
         if ((shape==self.__shape) and
             (depth==None or self.__depth==depth) and
-            (bounding_rectangle==None or self.__bounding_rectangle==bounding_rectangle)):
+            (top_left==None or self.__top_left==top_left)):
             #Nothing changed
             return
         #Tell the handlers what is happening before the update...
         self.__prior_update(ShapeHandler._SHAPE_UPDATE)
+        self.__shape = shape
         if depth!=None:
             self.__depth = depth
-        if bounding_rectangle!=None:
-            self.__bounding_rectangle = bounding_rectangle
-        self.__shape = shape
+        if top_left!=None:
+            self.__top_left = top_left
+        #Calculate the bounding rectangle...
+        (x,y) = self.__top_left
+        (width,height) = self.__shape.get_size()
+        self.__bounding_rectangle = (x,y,x+width,y+height)
         #and update them...
         self.__post_update(ShapeHandler._SHAPE_UPDATE)
+    
+    def get_top_left(self):
+        '''
+        @return: the top left coordinate where the shape being handled is positioned on screen
+        as (x,y)
+        '''
+        return self.__top_left
     
     def get_bounding_rectangle(self):
         '''
@@ -88,15 +102,19 @@ class ShapeHandler(object):
         '''
         return self.__bounding_rectangle
         
-    def set_bounding_rectangle(self, bounding_rectangle):
+    def set_top_left(self, top_left):
         '''
-        @param bounding_rectangle: the new bounding rectangle to use.
+        @param top_left: the new top left coordinate for the shape as (x,y).
         '''
-        if bounding_rectangle==self.__bounding_rectangle:
+        if top_left==self.__top_left:
             return
         #Tell the handlers what is happening before the update...
         self.__prior_update(ShapeHandler._BOUNDING_RECTANGLE_UPDATE)
-        self.__bounding_rectangle = bounding_rectangle
+        self.__top_left = top_left
+        #Update the bounding rectangle...
+        (x,y) = self.__top_left
+        (width,height) = self.__shape.get_size()
+        self.__bounding_rectangle = (x,y,x+width,y+height)
         #and update them...
         self.__post_update(ShapeHandler._BOUNDING_RECTANGLE_UPDATE)
         
@@ -152,3 +170,12 @@ class ShapeHandler(object):
         '''
         self.__capabilities.remove(capability)
     
+    def dispose(self):
+        '''
+        Dispose of this shape handler. You should not use this shape handler
+        again once it has been disposed...
+        '''
+        #For each enabled capability, dispose it!
+        for capability in self.__capabilities:
+            capability.dispose()
+        self.__capabilities.clear()

@@ -9,7 +9,7 @@ import mjb.dev.game_utility.input_listeners.keyboard_listener as key_listeners
 import mjb.dev.game_utility.input_listeners.mouse_button_listener as mouse_button_listeners
 import mjb.dev.game_utility.input_listeners.mouse_motion_listener as mouse_motion_listeners
 import mjb.dev.game_utility.input_listeners.frame_listener as frame_listeners
-import mjb.dev.game_utility.graphics.drawers.rectangle_drawer as rectangle_drawer
+import mjb.dev.game_utility.shapes.handlers.drawable_rectangle_handler as drawable_rectangle_handler
 import pygame.locals
 
 class QuitKeyboardListener(key_listeners.KeyboardListener):
@@ -67,7 +67,7 @@ def run():
     QuitKeyboardListener([pygame.locals.K_ESCAPE])
     'Your code goes here!'
     #rectangle_drawer.RectangleDrawer((x_min,y_min,width,height),(r,g,b),depth)
-    my_rectangle = rectangle_drawer.RectangleDrawer((500,400,100,100),(250,50,150),50)
+    my_rectangle = drawable_rectangle_handler.DrawableRectangleHandler((500,400,100,100),(250,50,150),50)
     Dadskeys(my_rectangle,[pygame.locals.K_KP8,pygame.locals.K_KP2])
     'End code'
     screen.Screen.start_game_loop()

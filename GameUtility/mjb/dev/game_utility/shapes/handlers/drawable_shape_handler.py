@@ -4,7 +4,7 @@ Created on 5 Aug 2014
 @author: michael
 '''
 
-from mjb.dev.game_utility.capabilities.shape_handler import ShapeHandler
+from mjb.dev.game_utility.shapes.handlers.shape_handler import ShapeHandler
 from mjb.dev.game_utility.capabilities.drawable import Drawable
 
 class DrawableShapeHandler(ShapeHandler):
@@ -50,4 +50,14 @@ class DrawableShapeHandler(ShapeHandler):
             self.__drawable_capability = None
         ShapeHandler._disable_capability(self, capability)
     
-        
+    def dispose(self):
+        '''
+        Dispose of this shape handler. You should not use this shape handler
+        again once it has been disposed...
+        '''
+        #For each enabled capability, dispose it!
+        if self.__drawable_capability!=None:
+            self.__drawable_capability.dispose()
+            self.__drawable_capability = None
+        #Call the base class too..
+        ShapeHandler.dispose(self)

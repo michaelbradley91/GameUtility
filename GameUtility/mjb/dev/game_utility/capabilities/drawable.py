@@ -170,3 +170,10 @@ class Drawable(Capability):
         @return: true iff this capability is enabled
         '''
         return self.__enabled
+    
+    def dispose(self):
+        '''
+        Dispose of this capability (freeing memory)
+        Once called, the capability should not be used again
+        '''
+        self.disable()
