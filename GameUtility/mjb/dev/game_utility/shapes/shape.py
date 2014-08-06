@@ -54,14 +54,6 @@ class Shape(object):
             while len(self.__cache)>=cache_depth:
                 self.__cache.pop()
         self.__cache_depth = cache_depth
-        
-    def get_size(self):
-        '''
-        (You should override this)
-        @return: the size of this shape as (width,height) as needed by shape handlers to form
-        the bounding rectangle
-        '''
-        pass
     
     def calculate_shape(self,precision,include_collider=True):
         '''
@@ -95,6 +87,14 @@ class Shape(object):
         '''
         This method's intended behaviour is identical to calculate shape's except this
         is meant to be overridden.
+        '''
+        pass
+    
+    def get_size(self):
+        '''
+        (You should override this)
+        @return: the size of this shape as (width,height) as needed by shape handlers to form
+        the bounding rectangle
         '''
         pass
     
