@@ -101,6 +101,15 @@ class ShapeHandler(object):
         @return: a single rectangle covering the whole shape in the form of (x_min,y_min,x_max,y_max)
         '''
         return self.__bounding_rectangle
+    
+    def move_top_left(self, x_move=0, y_move=0):
+        '''
+        Move the shape relative to its current position
+        @param x_move: the amount to move in the x direction (horizontal)
+        @param y_move: the amount to move in the y direction (vertical)
+        '''
+        (x_min,y_min) = self.get_top_left()
+        self.set_top_left((x_min+x_move,y_min+y_move))
         
     def set_top_left(self, top_left):
         '''

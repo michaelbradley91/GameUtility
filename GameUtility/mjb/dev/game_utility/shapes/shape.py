@@ -68,6 +68,10 @@ class Shape(object):
         should fit within the bounding rectangle (if it were rooted at (0,0)), and each rectangle will have the form
         (x_min,y_min,x_max,y_max). If the collider is included, it will include exactly those rectangles (with None keys)
         '''
+        #Check if the precision is the default
+        if precision==None:
+            #Use the outer rectangle
+            return ([],None)
         if self.__cache_depth>0:
             for (p,res) in self.__cache:
                 if (p==precision):
@@ -77,7 +81,7 @@ class Shape(object):
             if len(self.__cache)==self.__cache_depth:
                 self.__cache.pop()
             #Calculate the result in full...
-            res = self.calculate_shape(precision, True)
+            res = self._calculate_shape_to_override(precision, True)
             self.__cache.append((precision,res))
             return res
         #Cache not included.
@@ -86,7 +90,8 @@ class Shape(object):
     def _calculate_shape_to_override(self,precision,include_collider):
         '''
         This method's intended behaviour is identical to calculate shape's except this
-        is meant to be overridden.
+        is meant to be overridden. The precision will not be none in this case - the bounding
+        rectangle will be used.
         '''
         pass
     

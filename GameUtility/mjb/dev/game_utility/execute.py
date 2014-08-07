@@ -21,6 +21,10 @@ from mjb.dev.game_utility.capabilities.touchable import TouchScreen
 from mjb.dev.game_utility.capabilities.clickable import ClickScreen
 from mjb.dev.game_utility.capabilities.collideable import CollisionScreen
 from mjb.dev.game_utility.capabilities.clickable import Clickable
+from mjb.dev.game_utility.graphics.image import Image
+from mjb.dev.game_utility.graphics.image import ImageLoader
+from mjb.dev.game_utility.shapes.image_shape import ImageShape
+from mjb.dev.game_utility.shapes.handlers.image_shape_handler import ImageShapeHandler
 
 class DummyKeyListener(key_listeners.KeyboardListener,frame_listeners.FrameListener):
     
@@ -31,26 +35,29 @@ class DummyKeyListener(key_listeners.KeyboardListener,frame_listeners.FrameListe
         
     def mouse_enter_handler(self):
         #Colour the rectangle...
-        self.rectangle.set_colour((128,0,0))
+        self.flag_rect.set_colour((128,128,0))
         
     def mouse_leave_handler(self):
         #Set its colour back again
-        self.rectangle.set_colour((255,0,0))
+        self.flag_rect.set_colour((0,255,0))
         
     def button_down_handler(self,button,on_top):
-        self.rectangle.set_colour((0,255,0))
+        self.flag_rect.set_colour((0,128,128))
         
     def button_up_handler(self,button,on_top):
-        self.rectangle.set_colour((255,0,0))
+        self.flag_rect.set_colour((0,255,0))
     
     #A rectangle to play with
     def start(self):
-        self.rectangle = drawable_rectangle_handler.DrawableRectangleHandler((5,5,100,100),(255,0,0),10)
+        #self.rectangle = drawable_rectangle_handler.DrawableRectangleHandler((5,5,100,100),(255,0,0),10)
+        loader = ImageLoader("/home/michael/git/GameUtility/GameUtility/images")
+        self.image = loader.load_image("pacman.bmp", (255,255,255))
+        self.sprite = ImageShapeHandler(ImageShape(self.image),(5,5),10)
         #Attach a mouse enter and leave capability!
-        Touchable(self.rectangle,None,self.mouse_enter_handler,self.mouse_leave_handler)
+        Touchable(self.sprite,1,self.mouse_enter_handler,self.mouse_leave_handler)
         #Attach a click handler
-        Clickable(self.rectangle,None,self.button_down_handler, self.button_up_handler)
-        drawable_rectangle_handler.DrawableRectangleHandler((220,200,70,30),(0,255,0),20)
+        Clickable(self.sprite,1,self.button_down_handler, self.button_up_handler)
+        self.flag_rect = drawable_rectangle_handler.DrawableRectangleHandler((220,200,70,30),(0,255,0),20)
         drawable_rectangle_handler.DrawableRectangleHandler((280,210,50,40),(0,0,255),5)
         drawable_rectangle_handler.DrawableRectangleHandler((260,205,100,10),(255,0,255),12)
         for x in range(0,100):
@@ -88,17 +95,17 @@ class DummyKeyListener(key_listeners.KeyboardListener,frame_listeners.FrameListe
     
     def frame_passed(self):
         if self.key_LEFT:
-            #Move the rectangle
-            self.rectangle.move_rectangle(x_move=-1)
+            #Move the sprite
+            self.sprite.move_top_left(x_move=-1)
         if self.key_RIGHT:
-            #Move the rectangle
-            self.rectangle.move_rectangle(x_move=1)
+            #Move the sprite
+            self.sprite.move_top_left(x_move=1)
         if self.key_UP:
-            #Move the rectangle
-            self.rectangle.move_rectangle(y_move=-1)
+            #Move the sprite
+            self.sprite.move_top_left(y_move=-1)
         if self.key_DOWN:
-            #Move the rectangle
-            self.rectangle.move_rectangle(y_move=1)
+            #Move the sprite
+            self.sprite.move_top_left(y_move=1)
         
 class DummyMouseButtonListener(mouse_button_listeners.MouseButtonListener):
     

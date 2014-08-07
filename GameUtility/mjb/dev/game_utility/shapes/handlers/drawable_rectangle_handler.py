@@ -125,13 +125,6 @@ class DrawableRectangleHandler(DrawableShapeHandler):
         (x_min,y_min) = self.get_top_left()
         self.set_top_left((x_min+x_move,y_min+y_move))
         
-    def set_depth(self,depth):
-        '''
-        @param depth: the depth you wish this to now draw at
-        '''
-        if self.get_depth()!=depth:
-            self.set_depth(depth)
-        
     #Get the various properties...
     def get_rectangle(self):
         '''

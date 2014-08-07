@@ -61,3 +61,13 @@ class DrawableShapeHandler(ShapeHandler):
             self.__drawable_capability = None
         #Call the base class too..
         ShapeHandler.dispose(self)
+        
+    def redraw(self, top_left, surface):
+        '''
+        To be overridden - redraw the shape in this shape handler.
+        You should blit or otherwise draw onto the surface, clipping yourself as required.
+        @param top_left: the top left coordinate of the surface passed in as it will
+        be drawn on screen
+        @param surface: the surface to draw on
+        '''
+        pass
