@@ -4,6 +4,7 @@ Created on 28 Jul 2014
 @author: michael
 '''
 import unittest
+import mjb.test.game_utility.utility.test_extra_maths as test_extra_maths
 
 def suite():
     '''
@@ -11,7 +12,7 @@ def suite():
     '''
     test_suite = unittest.TestSuite(
         #Add all of the suites here:
-        [
+        [test_extra_maths.suite()
         ])
     return test_suite
 

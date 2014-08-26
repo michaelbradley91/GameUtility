@@ -91,16 +91,16 @@ def are_rotated_rectangles_colliding(rect1, rect2, meet=False):
     #Simple heuristic to deal with trivial rectangles...
     if abs(rect1[2])<=point_error and abs(rect2[2])<=point_error:
         #Simple!
-        (min_x1,min_y1) = sub_vectors(rect1[1],rect1[0])
-        (max_x1,max_y1) = add_vectors(rect1[1],rect1[0])
-        (min_x2,min_y2) = sub_vectors(rect2[1],rect2[0])
-        (max_x2,max_y2) = add_vectors(rect2[1],rect2[0])
+        (min_x1,min_y1) = sub_vectors(rect1[0],rect1[1])
+        (max_x1,max_y1) = add_vectors(rect1[0],rect1[1])
+        (min_x2,min_y2) = sub_vectors(rect2[0],rect2[1])
+        (max_x2,max_y2) = add_vectors(rect2[0],rect2[1])
         if meet:
             #Can touch
             return min_x1<=max_x2+point_error and min_y1<=max_y2+point_error and max_x1>=min_x2-point_error and max_y1>=min_y2-point_error
         else:
             #Can't touch
-            return min_x1<max_x2 and min_y1<max_y2 and max_x1>min_x2 and max_y1>min_y2
+            return min_x1<=max_x2-point_error and min_y1<=max_y2-point_error and max_x1>=min_x2+point_error and max_y1>=min_y2+point_error
     angle = rect1[2] - rect2[2]
         
     cos_a = math.cos(angle)
@@ -152,7 +152,7 @@ def are_rotated_rectangles_colliding(rect1, rect2, meet=False):
             return False
     else:
         #Touching not allowed
-        if B_x >= top_right[0] or -B_x <= bottom_left[0]:
+        if B_x > top_right[0]-point_error or -B_x < bottom_left[0]+point_error:
             return False
     
     #Heuristic for axis aligned rectangles...
@@ -202,5 +202,5 @@ def are_rotated_rectangles_colliding(rect1, rect2, meet=False):
         return not ((ext1 <= bottom_left[1]+point_error and ext2 <= bottom_left[1]+point_error)
                     or (ext1 >= top_right[1]-point_error and ext2 >= top_right[1]-point_error))
     else:
-        return not ((ext1 < bottom_left[1] and ext2 < bottom_left[1])
-                    or (ext1 > top_right[1] and ext2 > top_right[1]))
+        return not ((ext1 <= bottom_left[1]-point_error and ext2 <= bottom_left[1]-point_error)
+                    or (ext1 >= top_right[1]+point_error and ext2 >= top_right[1]+point_error))
